@@ -1,0 +1,11 @@
+/.idea/.gitignore
+/.idea/encodings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/test_paper_classification.iml
+/.idea/vcs.xml
+/data/__init__.py
+/data/__pycache__/__init__.cpython-37.pyc
+/data/__pycache__/data_process.cpython-37.pyc

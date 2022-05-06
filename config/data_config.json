@@ -1,0 +1,11 @@
+{
+  "root_folder": "/data/math_research/test_paper_cls/",
+  "origin_image_folder": "raw_data/origin_image",
+  "augment_image_folder": "raw_data/augment_image",
+  "dataset_folder": "dataset",
+  "train_folder": "train",
+  "train_data_file": "train.csv",
+  "test_folder": "test",
+  "test_data_file": "test.csv",
+  "model_folder": "model"
+}
