@@ -1,7 +1,7 @@
 # # from __future__ import print_function
 import cv2
 import numpy as np
-from szmlkit.cv.classification.keras_cls.utils.cam import get_cam
+from keras_cls.utils.cam import get_cam
 
 
 def get_random_box(img_size, area_ratio):

@@ -1,6 +1,6 @@
-from szmlkit.cv.classification.keras_cls.model.efficientnet import EfficientNet
-from szmlkit.cv.classification.keras_cls.model.resnet import ResNet
-from szmlkit.cv.classification.keras_cls.utils.regularization import add_regularization
+from keras_cls.model.efficientnet import EfficientNet
+from keras_cls.model.resnet import ResNet
+from keras_cls.utils.regularization import add_regularization
 
 
 def get_model(args, num_class):

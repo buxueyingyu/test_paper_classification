@@ -8,10 +8,10 @@ from sklearn import metrics as sklearn_metrics
 import time
 from tqdm import tqdm
 
-from szmlkit.cv.classification.keras_cls.model.model_builder import get_model
-from szmlkit.cv.classification.keras_cls.train import Image_Classification_Parameter
-from szmlkit.cv.classification.keras_cls.utils.common import get_best_model_path
-from szmlkit.cv.classification.keras_cls.utils.preprocess import normalize, resize_img
+from keras_cls.model.model_builder import get_model
+from keras_cls.train import Image_Classification_Parameter
+from keras_cls.utils.common import get_best_model_path
+from keras_cls.utils.preprocess import normalize, resize_img
 
 
 class Image_Classification_Inference:
@@ -161,26 +161,26 @@ class Inference_Baseline:
         return img
 
 
-def get_image_classification_inference(model_folder: str = r'model/img_cls/'):
+def get_image_classification_inference(root_path: str,
+                                       backbone: str = 'EfficientNetB5',
+                                       image_size=(456, 456),
+                                       model_folder: str = r'model/',
+                                       test_label_file: str = r'dataset/test.csv',
+                                       test_image_folder: str = r'dataset/test/'):
     try:
         home_path = os.environ['HOME']
-        if 'root' in home_path:
-            root_path = r'/data/efs/mid/pubtabnet/train/'
-        else:
-            root_path = os.path.join(home_path,
-                                     'data/efs/mid/pubtabnet/train/')
+        root_path = os.path.join(home_path, root_path[1:])
     except:
-        root_path = r'/data/efs/mid/pubtabnet/train/'
+        pass
 
     img_cls_params = Image_Classification_Parameter()
     img_cls_params.checkpoints = os.path.join(root_path, model_folder)
     img_cls_params.label_file = os.path.join(root_path,
-                                             r'pdf_table/fixed/cls_val/img_label.csv')
-    img_cls_params.dataset_dir = os.path.join(root_path,
-                                              r'pdf_table/fixed/cls_val/fixed_label_img/')
-    img_cls_params.num_classes = 3
-    img_cls_params.backbone = r'EfficientNetB4'
-    img_cls_params.progressive_resizing = [(380, 380)]
+                                             test_label_file)
+    img_cls_params.dataset_dir = os.path.join(root_path, test_image_folder)
+
+    img_cls_params.backbone = backbone
+    img_cls_params.progressive_resizing = [image_size]
     img_cls_params.epochs = 100
     img_cls_params.batch_size = 8
 

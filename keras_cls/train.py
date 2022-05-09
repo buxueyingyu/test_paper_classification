@@ -1,14 +1,14 @@
 import os, argparse, sys
-from szmlkit.cv.classification.keras_cls.utils.lr_scheduler import get_lr_scheduler
-from szmlkit.cv.classification.keras_cls.model.model_builder import get_model
-from szmlkit.cv.classification.keras_cls.losses.losses_builder import get_losses
-from szmlkit.cv.classification.keras_cls.optimizer.optimizer_builder import get_optimizer
-from szmlkit.cv.classification.keras_cls.generator.generator_builder import get_generator
-from szmlkit.cv.classification.keras_cls.utils.common import freeze_model, show_training_images, \
+from keras_cls.utils.lr_scheduler import get_lr_scheduler
+from keras_cls.model.model_builder import get_model
+from keras_cls.losses.losses_builder import get_losses
+from keras_cls.optimizer.optimizer_builder import get_optimizer
+from keras_cls.generator.generator_builder import get_generator
+from keras_cls.utils.common import freeze_model, show_training_images, \
     get_best_model_path, get_confusion_matrix, \
     show_classes_hist, clean_checkpoints
-from szmlkit.cv.classification.keras_cls.utils.lr_finder import LRFinder
-from szmlkit.cv.classification.keras_cls.utils.common import set_mixed_precision
+from keras_cls.utils.lr_finder import LRFinder
+from keras_cls.utils.common import set_mixed_precision
 
 import logging
 import tensorflow as tf

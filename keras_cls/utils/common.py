@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.metrics import plot_confusion_matrix
-from szmlkit.cv.classification.keras_cls.utils.confusion_matrix_pretty_print import \
+from keras_cls.utils.confusion_matrix_pretty_print import \
     plot_confusion_matrix_from_data
 from screeninfo import get_monitors
 

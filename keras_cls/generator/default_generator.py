@@ -7,13 +7,12 @@ from tqdm import tqdm
 import albumentations as A
 import random
 import pandas as pd
-import szmlkit.cv.classification.keras_cls
-from szmlkit.cv.classification.keras_cls.utils.custom_augment import train_augment
-from szmlkit.cv.classification.keras_cls.utils.preprocess import normalize
-from szmlkit.cv.classification.keras_cls.augment import auto_augment, rand_augment, \
+import keras_cls
+from keras_cls.utils.custom_augment import train_augment
+from keras_cls.utils.preprocess import normalize
+from keras_cls.augment import auto_augment, rand_augment, \
     baseline_augment, mixup, cutmix
-from szmlkit.cv.classification.keras_cls.utils.preprocess import resize_img_aug, \
-    resize_img
+from keras_cls.utils.preprocess import resize_img_aug, resize_img
 
 
 class DefaultGenerator(tf.keras.utils.Sequence):
@@ -33,7 +32,8 @@ class DefaultGenerator(tf.keras.utils.Sequence):
             self.create_split_list(self.dataset_dir,
                                    args.checkpoints,
                                    args.label_file,
-                                   dataset_sample_ratio)
+                                   dataset_sample_ratio,
+                                   mode)
         # print(train_img_path_list)
         # print(val_img_path_list)
         if mode == 'train':
@@ -52,7 +52,6 @@ class DefaultGenerator(tf.keras.utils.Sequence):
             self.label_list = np.append(self.label_list, pad_label_list)
             self.data_index = np.arange(0, len(self.label_list))
             np.random.shuffle(self.data_index)
-
         else:
             self.img_path_list = val_img_path_list
             self.label_list = val_label_list
@@ -154,7 +153,7 @@ class DefaultGenerator(tf.keras.utils.Sequence):
 
         return batch_imgs, one_hot_batch_labels
 
-    def create_split_list(self, img_dir, model_dir, label_file: str, dataset_sample_ratio):
+    def create_split_list(self, img_dir, model_dir, label_file: str, dataset_sample_ratio, mode):
         train_imgs_list = []
         val_imgs_list = []
         train_labels_list = []
@@ -190,9 +189,10 @@ class DefaultGenerator(tf.keras.utils.Sequence):
         val_imgs_list = val_imgs_list[random_index]
         val_labels_list = val_labels_list[random_index]
 
-        with open(os.path.join(model_dir, 'class.names'), 'w') as f1:
-            for val in valid_class_names:
-                f1.write(val + "\n")
+        if mode == 'train':
+            with open(os.path.join(model_dir, 'class.names'), 'w') as f1:
+                for val in valid_class_names:
+                    f1.write(val + "\n")
         return train_imgs_list, val_imgs_list, train_labels_list, val_labels_list, valid_class_names
 
     def create_split_list_by_dir(self, root_dir, dataset_sample_ratio):

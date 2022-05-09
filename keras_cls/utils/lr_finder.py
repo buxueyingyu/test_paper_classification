@@ -4,9 +4,9 @@ import tensorflow.keras.backend as K
 import math
 import matplotlib.pyplot as plt
 import logging
-from szmlkit.cv.classification.keras_cls.utils.lr_scheduler import get_lr_scheduler
+from keras_cls.utils.lr_scheduler import get_lr_scheduler
 from tqdm import tqdm
-from szmlkit.cv.classification.keras_cls.utils.common import move_plot_window_to_center
+from keras_cls.utils.common import move_plot_window_to_center
 
 
 class LRFinder():

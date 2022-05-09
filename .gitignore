@@ -9,3 +9,10 @@
 /data/__init__.py
 /data/__pycache__/__init__.cpython-37.pyc
 /data/__pycache__/data_process.cpython-37.pyc
+/keras_cls/__pycache__/*.pyc
+/keras_cls/augment/__pycache__/*.pyc
+/keras_cls/generator/__pycache__/*.pyc
+/keras_cls/losses/__pycache__/*.pyc
+/keras_cls/model/__pycache__/*.pyc
+/keras_cls/optimizer/__pycache__/*.pyc
+/keras_cls/utils/__pycache__/*.pyc

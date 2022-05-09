@@ -1,7 +1,7 @@
 import tensorflow as tf
-from szmlkit.cv.classification.keras_cls.utils.layers import rename_layer
+from keras_cls.utils.layers import rename_layer
 import cv2
-from szmlkit.cv.classification.keras_cls.utils.class_head import class_head
+from keras_cls.utils.class_head import class_head
 
 
 class ResNet():

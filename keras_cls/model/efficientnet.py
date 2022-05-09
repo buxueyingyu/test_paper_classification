@@ -1,8 +1,8 @@
 import tensorflow as tf
-from szmlkit.cv.classification.keras_cls.utils.layers import rename_layer
-from szmlkit.cv.classification.keras_cls.utils.class_head import class_head
-from szmlkit.cv.classification.keras_cls.utils.layers import dropblock_layer
-from szmlkit.cv.classification.keras_cls.model.efficientnet_base import \
+from keras_cls.utils.layers import rename_layer
+from keras_cls.utils.class_head import class_head
+from keras_cls.utils.layers import dropblock_layer
+from keras_cls.model.efficientnet_base import \
     EfficientNetB0, EfficientNetB1, EfficientNetB2, EfficientNetB3, \
     EfficientNetB4, EfficientNetB5, EfficientNetB6, EfficientNetB7
 

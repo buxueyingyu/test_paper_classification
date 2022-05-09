@@ -1,5 +1,5 @@
 import tensorflow as tf
-from szmlkit.cv.classification.keras_cls.utils.dropblock import dropblock
+from keras_cls.utils.dropblock import dropblock
 
 
 def rename_layer(name="last_conv"):

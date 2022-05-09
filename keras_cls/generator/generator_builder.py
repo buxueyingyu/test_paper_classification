@@ -1,4 +1,4 @@
-from szmlkit.cv.classification.keras_cls.generator.default_generator import DefaultGenerator
+from keras_cls.generator.default_generator import DefaultGenerator
 
 
 def get_generator(args):

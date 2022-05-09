@@ -1,6 +1,6 @@
 import tensorflow as tf
 from tensorflow_addons.optimizers.weight_decay_optimizers import AdamW
-from szmlkit.cv.classification.keras_cls.optimizer.sam import SAMOptimizer
+from keras_cls.optimizer.sam import SAMOptimizer
 
 
 def get_optimizer(args):

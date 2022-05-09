@@ -1,5 +1,6 @@
 import os
 import logging
+import shutil
 import time
 from tqdm import tqdm
 from copy import deepcopy
@@ -13,6 +14,9 @@ from albumentations import (
 )
 import cv2
 import random
+from sklearn.model_selection import train_test_split
+from glob import glob
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -124,3 +128,54 @@ class DataProcessor:
             aug_image = cv2.cvtColor(aug_image, cv2.COLOR_BGR2RGB)
             cv2.imwrite(new_file_path, aug_image, [cv2.IMWRITE_JPEG_QUALITY, 50])
         logger.info('Complete to output augmented image to destination path.')
+
+    def split_train_test_data(self,
+                              source_folder: str,
+                              train_folder: str,
+                              test_folder: str,
+                              train_file: str,
+                              test_file: str,
+                              test_size=100):
+        if not source_folder or not isinstance(source_folder, str) or not os.path.exists(source_folder):
+            return
+        if not train_folder and not isinstance(train_folder, str):
+            return
+        if not test_folder and not isinstance(test_folder, str):
+            return
+        if not train_file and not isinstance(train_file, str):
+            return
+        if not test_file and not isinstance(test_file, str):
+            return
+
+        os.makedirs(train_folder, exist_ok=True)
+        os.makedirs(test_folder, exist_ok=True)
+        all_img_files = glob(os.path.join(source_folder, '*.jpg'))
+        train_dataset, test_dataset = train_test_split(all_img_files, test_size=test_size, random_state=8)
+        origin_dataset = [file for file in test_dataset if 'origin' in file]
+        for origin in origin_dataset:
+            test_dataset.remove(origin)
+        train_dataset += origin_dataset
+        logger.info(f'Handle {len(train_dataset)} train image files')
+        self.get_label_data(train_dataset, dest_path=train_folder, label_file=train_file)
+        logger.info(f'Handle {len(test_dataset)} test image files')
+        self.get_label_data(test_dataset, dest_path=test_folder, label_file=test_file)
+
+    def get_label_data(self, image_list: list, dest_path: str, label_file: str):
+        os.makedirs(dest_path, exist_ok=True)
+        data_list = []
+        for index, image_file in enumerate(tqdm(image_list)):
+            base_name = os.path.basename(image_file)
+            pure_name = base_name.replace('.jpg', '')
+            name_list = pure_name.split('_')
+            if len(name_list) == 4:
+                label_name = '_'.join(name_list[0:3])
+                data = {'image': base_name,
+                        'label': label_name}
+                data_list.append(data)
+                shutil.move(image_file, os.path.join(dest_path, base_name))
+        label_data = pd.DataFrame(data_list)
+        label_data.to_csv(label_file, encoding='utf-8', index=False)
+        return data_list
+
+
+
