@@ -51,7 +51,7 @@ class Image_Classification_Inference:
         self.local_weights = local_weights
         self.baseline = Inference_Baseline()
 
-    def validate(self, validate_data_file: str, by_threshold: bool = False, threshold: float = 0.6):
+    def validate(self, validate_data_file: str):
         assert validate_data_file and os.path.exists(validate_data_file)
         validate_data = pd.read_csv(validate_data_file, sep=',')
 
@@ -75,21 +75,25 @@ class Image_Classification_Inference:
             image_path = os.path.join(self.para.dataset_dir, image_name)
             if os.path.exists(image_path):
                 ground_truth = self.tag2idx.get(label, 1)
-                prediction_value = self.predict(image_path, by_threshold=by_threshold, threshold=threshold)
+                prediction_value = self.predict(image_path)
                 print('{0}/{1} Image: {2}, ground truth: {3}, prediction: {4}'
                       .format(index + 1,
                               len(validate_data),
                               image_name,
-                              self.idx2tag.get(ground_truth, 'normal'),
-                              self.idx2tag.get(prediction_value, 'normal')))
+                              self.idx2tag.get(ground_truth, 'N/A'),
+                              self.idx2tag.get(prediction_value, 'N/A')))
 
                 true_list.append(ground_truth)
                 predict_list.append(prediction_value)
                 data = {'image': image_name,
-                        'ground_truth': self.idx2tag.get(ground_truth, 'normal'),
-                        'prediction': self.idx2tag.get(prediction_value, 'normal')}
+                        'ground_truth': self.idx2tag.get(ground_truth, 'N/A'),
+                        'prediction': self.idx2tag.get(prediction_value, 'N/A')}
                 details.append(data)
-        report = sklearn_metrics.classification_report(true_list, predict_list, target_names=tags)
+        labels = [label for label in range(len(tags))]
+        report = sklearn_metrics.classification_report(true_list,
+                                                       predict_list,
+                                                       labels=labels,
+                                                       target_names=tags)
 
         print(report)
         if self.para.checkpoints:
@@ -99,31 +103,23 @@ class Image_Classification_Inference:
                 local_weights_basename = r'img_cls_best_weight'
             report_folder = os.path.join(self.para.checkpoints, 'report/')
             os.makedirs(report_folder, exist_ok=True)
-            report_file = '{0}_{1}_by_threshold_{2}_threshold_{3}.txt'.format(local_weights_basename,
-                                                                              by_threshold,
-                                                                              threshold,
-                                                                              time.strftime('%Y%m%d%H%M%S',
-                                                                                            time.localtime(
-                                                                                                time.time())))
+            time_text = time.strftime('%Y%m%d%H%M%S',
+                                      time.localtime(
+                                          time.time()))
+            report_file = f'{local_weights_basename}_{time_text}.txt'
             report_path = os.path.join(report_folder, report_file)
             with open(report_path, mode='w', encoding='utf-8') as file:
                 file.write(report)
             detail_df = pd.DataFrame(details)
 
-            detail_file = '{0}_{1}.csv'.format(local_weights_basename,
-                                               time.strftime('%Y%m%d%H%M%S',
-                                                             time.localtime(time.time())))
+            detail_file = f'{local_weights_basename}_{time_text}.csv'
             detail_path = os.path.join(report_folder, detail_file)
             detail_df.to_csv(detail_path, sep=',', encoding='utf-8', index=False)
 
-    def predict(self, image_path: str, by_threshold: bool = False, threshold: float = 0.6):
+    def predict(self, image_path: str):
         """
         :param image_path:
         :type image_path:
-        :param by_threshold: 是否对simple类别进行threshold判定
-        :type by_threshold:
-        :param threshold: simple类别threshold，只有超过阈值才判定，否则判定为normal类别
-        :type threshold:
         :return:
         :rtype:
         """
@@ -134,13 +130,11 @@ class Image_Classification_Inference:
         image = normalize(image, mode='tf')
         pred_result = self.model.predict_on_batch(image)
         pred_cls = np.argmax(pred_result, axis=-1)
-        if by_threshold and pred_cls[0] == 2 and pred_result[0][2] < threshold:
-            pred_cls[0] = 1
         return pred_cls[0]
 
     def predict_cls_name(self, image_path: str):
         pred_cls = self.predict(image_path)
-        return self.idx2tag.get(pred_cls, 'normal')
+        return self.idx2tag.get(pred_cls, 'N/A')
 
     def show_img(self, image_path, image):
         plt.figure(os.path.basename(image_path))

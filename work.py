@@ -6,6 +6,7 @@ from tqdm import tqdm
 import numpy as np
 import matplotlib.pyplot as plt
 import logging
+import pandas as pd
 
 logger = logging.getLogger(__name__)
 
@@ -153,7 +154,7 @@ def train():
     img_cls_params.backbone = r'EfficientNetB5'
     img_cls_params.progressive_resizing = [(456, 456)]
     img_cls_params.epochs = 100
-    img_cls_params.batch_size = 1
+    img_cls_params.batch_size = 8
     train_image_classification_model(img_cls_params)
 
 
@@ -172,42 +173,41 @@ def validate_image_classification():
                                                    model_folder='model/',
                                                    test_label_file = r'dataset/test.csv',
                                                    test_image_folder = r'dataset/test/')
-    bythreshold = True
-    threshold_list = [0.9, 0.8, 0.7, 0.6, 0.5, 0.4]
-    for threshold in threshold_list:
-        inference.validate(inference.para.label_file, by_threshold=bythreshold, threshold=threshold)
+    inference.validate(inference.para.label_file)
 
     # inference = get_image_classification_inference(model_folder=r'model/img_cls/backup/')
     # inference.validate(inference.para.label_file)
 
 
 def classify_table_image(inference=None,
-                         dataset_path=r'pdf_table/split/dataset_20210916',
-                         img_folder: str = 'img/'):
+                         img_folder: str = 'test/'):
     if inference is None:
         inference = get_image_classification_inference()
 
+    config = get_config()
+    root_path = config.get('root_folder', '/data/math_research/test_paper_cls/')
     try:
         home_path = os.environ['HOME']
         root_path = os.path.join(home_path,
-                                 r'data/efs/mid/pubtabnet/train/')
+                                 root_path[1:])
     except:
-        root_path = r'/data/efs/mid/pubtabnet/train/'
+        pass
+    dataset_path = config.get('dataset_folder', 'dataset')
 
-    inference.para.label_file = os.path.join(root_path, dataset_path, r'img_cls.csv')
+    inference.para.label_file = os.path.join(root_path, dataset_path, r'predict_img_cls.csv')
     inference.para.dataset_dir = os.path.join(root_path, dataset_path, img_folder)
 
     data_list = []
-    img_cls_label_path = os.path.join(root_path, dataset_path, r'img_cls_label/')
-    if not os.path.exists(img_cls_label_path):
-        os.makedirs(img_cls_label_path)
+    # img_cls_label_path = os.path.join(root_path, dataset_path, r'img_cls_label/')
+    # if not os.path.exists(img_cls_label_path):
+    #     os.makedirs(img_cls_label_path)
 
     img_list = glob(os.path.join(inference.para.dataset_dir, '*.jpg'))
     img_amount = len(img_list)
     if img_list:
         for index, img_path in enumerate(tqdm(img_list)):
-            prediction_value = inference.predict(img_path, by_threshold=True, threshold=0.5)
-            prediction_name = inference.idx2tag.get(prediction_value, 'normal')
+            prediction_value = inference.predict(img_path)
+            prediction_name = inference.idx2tag.get(prediction_value, 'N/A')
             logger.info('Handle the {0}/{1} image: {2}, class: {3}'
                         .format(index + 1,
                                 img_amount,
@@ -216,8 +216,8 @@ def classify_table_image(inference=None,
             data = {'image': os.path.basename(img_path), 'label': prediction_name}
             data_list.append(data)
     #         write_label_xml_file(img_cls_label_path, img_path, prediction_name)
-    # data_df = pd.DataFrame(data_list)
-    # data_df.to_csv(inference.para.label_file, sep=',', encoding='utf-8', index=False)
+    data_df = pd.DataFrame(data_list)
+    data_df.to_csv(inference.para.label_file, sep=',', encoding='utf-8', index=False)
 
 
 if __name__ == '__main__':
@@ -227,4 +227,5 @@ if __name__ == '__main__':
     # compress_image()
     # compress_image_by_byte()
     # split_train_test()
-    train()
+    # train()
+    validate_image_classification()
