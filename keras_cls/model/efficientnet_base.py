@@ -26,6 +26,7 @@ from __future__ import print_function
 
 import copy
 import math
+import random
 
 from tensorflow.python.keras import backend
 from tensorflow.python.keras.applications import imagenet_utils
@@ -391,13 +392,15 @@ def EfficientNet(
 
     # Load weights.
     if weights == 'imagenet':
+        prefix = model_name.split('_')[-1]
         if include_top:
             file_suffix = '.h5'
-            file_hash = WEIGHTS_HASHES[model_name[-2:]][0]
+            file_hash = WEIGHTS_HASHES[prefix[-2:]][0]
         else:
             file_suffix = '_notop.h5'
-            file_hash = WEIGHTS_HASHES[model_name[-2:]][1]
-        file_name = model_name + file_suffix
+            file_hash = WEIGHTS_HASHES[prefix[-2:]][1]
+
+        file_name = prefix + file_suffix
         weights_path = data_utils.get_file(
             file_name,
             BASE_WEIGHTS_PATH + file_name,
@@ -520,13 +523,14 @@ def EfficientNetB0(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb0',
                    **kwargs):
     return EfficientNet(
         1.0,
         1.0,
         224,
         0.2,
-        model_name='efficientnetb0',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -544,13 +548,14 @@ def EfficientNetB1(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb1',
                    **kwargs):
     return EfficientNet(
         1.0,
         1.1,
         240,
         0.2,
-        model_name='efficientnetb1',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -568,13 +573,14 @@ def EfficientNetB2(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb2',
                    **kwargs):
     return EfficientNet(
         1.1,
         1.2,
         260,
         0.3,
-        model_name='efficientnetb2',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -592,13 +598,14 @@ def EfficientNetB3(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb3',
                    **kwargs):
     return EfficientNet(
         1.2,
         1.4,
         300,
         0.3,
-        model_name='efficientnetb3',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -616,13 +623,14 @@ def EfficientNetB4(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb4',
                    **kwargs):
     return EfficientNet(
         1.4,
         1.8,
         380,
         0.4,
-        model_name='efficientnetb4',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -640,13 +648,14 @@ def EfficientNetB5(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb5',
                    **kwargs):
     return EfficientNet(
         1.6,
         2.2,
         456,
         0.4,
-        model_name='efficientnetb5',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -664,13 +673,14 @@ def EfficientNetB6(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb6',
                    **kwargs):
     return EfficientNet(
         1.8,
         2.6,
         528,
         0.5,
-        model_name='efficientnetb6',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -688,13 +698,14 @@ def EfficientNetB7(include_top=True,
                    pooling=None,
                    classes=1000,
                    classifier_activation='softmax',
+                   model_name='efficientnetb7',
                    **kwargs):
     return EfficientNet(
         2.0,
         3.1,
         600,
         0.5,
-        model_name='efficientnetb7',
+        model_name=get_random_name(model_name),
         include_top=include_top,
         weights=weights,
         input_tensor=input_tensor,
@@ -703,6 +714,10 @@ def EfficientNetB7(include_top=True,
         classes=classes,
         classifier_activation=classifier_activation,
         **kwargs)
+
+def get_random_name(model_name: str):
+    random_text = str(random.randint(1, 10000))
+    return f'{random_text}_{model_name}'
 
 
 EfficientNetB0.__doc__ = BASE_DOCSTRING.format(name='EfficientNetB0')

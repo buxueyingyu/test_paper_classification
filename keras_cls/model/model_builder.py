@@ -3,7 +3,7 @@ from keras_cls.model.resnet import ResNet
 from keras_cls.utils.regularization import add_regularization
 
 
-def get_model(args, num_class):
+def get_model(args, num_class, include_top=True):
     if args.backbone[0:3] == "Res":
         try:
             depth = int(args.backbone[-3:])
@@ -23,7 +23,7 @@ def get_model(args, num_class):
                              dropout=args.dropout)
     else:
         raise ValueError("{} is not supported!".format(args.backbone))
-    model = model.get_model()
+    model = model.get_model(include_top=include_top)
     # if  args.optimizer != "AdamW":
     #     model = add_regularization(model,args.weight_decay)
 

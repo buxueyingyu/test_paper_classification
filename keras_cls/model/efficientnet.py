@@ -29,7 +29,7 @@ class EfficientNet():
         self.loss = loss
         self.dropout = dropout
 
-    def get_model(self):
+    def get_model(self, include_top=True):
         input_layer = tf.keras.Input(shape=(None, None, 3))
         # input_layer = tf.keras.Input(shape=(224, 224, 3))
 
@@ -80,13 +80,13 @@ class EfficientNet():
                         input_layer)
         elif self.type == 'B5':
             try:
-                x = tf.keras.applications.EfficientNetB5(include_top=False, weights=self.weights)(input_layer)
+                x = EfficientNetB5(include_top=False, weights=self.weights)(input_layer)
             except:
                 try:
+                    x = tf.keras.applications.EfficientNetB5(include_top=False, weights=self.weights)(input_layer)
+                except:
                     x = tf.keras.applications.efficientnet.EfficientNetB5(include_top=False, weights=self.weights)(
                         input_layer)
-                except:
-                    x = EfficientNetB5(include_top=False, weights=self.weights)(input_layer)
         elif self.type == 'B6':
             try:
                 x = tf.keras.applications.EfficientNetB6(include_top=False, weights=self.weights)(input_layer)
@@ -117,14 +117,12 @@ class EfficientNet():
             x = rename_layer(name="last_conv")(x)
             x = tf.keras.layers.GlobalAveragePooling2D()(x)
 
-        x = class_head(x, self.classes, 512, dropout=self.dropout)
+        if include_top:
+            x = class_head(x, self.classes, 512, dropout=self.dropout)
 
-        # print('x.dtype: %s' % x.dtype.name)
-        # print(x.kernel)
+            if self.loss == 'ce':
+                x = tf.keras.layers.Activation(tf.keras.activations.softmax, dtype='float32', name="predictions")(x)
+            else:
+                x = tf.keras.layers.Activation(tf.keras.activations.sigmoid, dtype='float32', name="predictions")(x)
 
-        if self.loss == 'ce':
-            x = tf.keras.layers.Activation(tf.keras.activations.softmax, dtype='float32', name="predictions")(x)
-        else:
-            x = tf.keras.layers.Activation(tf.keras.activations.sigmoid, dtype='float32', name="predictions")(x)
-        # print('Outputs dtype: %s' % x.dtype.name)
         return tf.keras.Model(inputs=input_layer, outputs=x)

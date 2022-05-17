@@ -12,7 +12,7 @@ class ResNet():
         self.weights = weights
         self.loss = loss
 
-    def get_model(self):
+    def get_model(self, include_top=True):
         input_layer = tf.keras.Input(shape=(None, None, 3))
         if self.type == 50:
             try:
@@ -41,10 +41,11 @@ class ResNet():
             x = rename_layer(name="last_conv")(x)
             x = tf.keras.layers.GlobalAveragePooling2D()(x)
 
-        x = class_head(x, self.classes, 512)
-        if self.loss == 'ce':
-            x = tf.keras.layers.Activation(tf.keras.activations.softmax, name="predictions")(x)
-        else:
-            x = tf.keras.layers.Activation(tf.keras.activations.sigmoid, name="predictions")(x)
+        if include_top:
+            x = class_head(x, self.classes, 512)
+            if self.loss == 'ce':
+                x = tf.keras.layers.Activation(tf.keras.activations.softmax, name="predictions")(x)
+            else:
+                x = tf.keras.layers.Activation(tf.keras.activations.sigmoid, name="predictions")(x)
 
         return tf.keras.Model(inputs=input_layer, outputs=x)
