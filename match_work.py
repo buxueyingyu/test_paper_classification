@@ -110,7 +110,7 @@ def test_data_generator():
 
 
 def train_match_model():
-    image_classification_parameter = get_image_classification_parameter(data_mode='test')
+    image_classification_parameter = get_image_classification_parameter(data_mode='train')
     match_net = MatchNet(img_cls_params=image_classification_parameter)
     match_net.train_image_classification_model()
 
