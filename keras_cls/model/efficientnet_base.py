@@ -716,6 +716,16 @@ def EfficientNetB7(include_top=True,
         **kwargs)
 
 def get_random_name(model_name: str):
+    """
+    随机获得模型名称
+    对于双塔模型来说，双input的backbone模型的layers中不允许有重复layer名称
+    这个限制，是随机获得模型名称的原因
+    Args:
+        model_name ():
+
+    Returns:
+
+    """
     random_text = str(random.randint(1, 10000))
     return f'{random_text}_{model_name}'
 

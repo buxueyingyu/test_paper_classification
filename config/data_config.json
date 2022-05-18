@@ -5,7 +5,10 @@
   "dataset_folder": "dataset",
   "train_folder": "train",
   "train_data_file": "train.csv",
+  "train_match_data_file": "train_match.csv",
   "test_folder": "test",
   "test_data_file": "test.csv",
-  "model_folder": "model"
+  "test_match_data_file": "test_match.csv",
+  "model_folder": "model",
+  "match_model_folder": "match_model"
 }

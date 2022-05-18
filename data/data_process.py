@@ -177,5 +177,53 @@ class DataProcessor:
         label_data.to_csv(label_file, encoding='utf-8', index=False)
         return data_list
 
+    def generate_match_data(self, image_path: str, label_file: str):
+        if not image_path and not os.path.exists(image_path):
+            return
+        image_file_list = glob(os.path.join(image_path, '*.jpg'))
+        choose_file_list = []
 
+        if len(image_file_list) < 100:
+            choose_file_list = image_file_list
+        else:
+            main_name_list = []
+            for index, image_file in enumerate(tqdm(image_file_list)):
+                base_name = os.path.basename(image_file)
+                pure_name = base_name.replace('.jpg', '')
+                name_list = pure_name.split('_')
+                main_name = '_'.join(name_list[0:3])
+                if main_name not in main_name_list:
+                    img_list_with_main_name = [img_file for img_file in image_file_list
+                                               if os.path.basename(img_file).startswith(main_name)
+                                               and 'origin' not in img_file]
+                    _, choose_list = train_test_split(img_list_with_main_name,
+                                                      test_size=3,
+                                                      random_state=2022)
+                    choose_list.append(os.path.join(image_path, f'{main_name}_origin.jpg'))
+                    choose_file_list.extend(choose_list)
+                    main_name_list.append(main_name)
+        data_list = []
+        handled_data_list = []
 
+        for left_index, left_file in enumerate(tqdm(choose_file_list)):
+            left_base_name = os.path.basename(left_file)
+            left_pure_name = left_base_name.replace('.jpg', '')
+            left_name_list = left_pure_name.split('_')
+            left_main_name = '_'.join(left_name_list[0:3])
+            for right_index, right_file in enumerate(tqdm(choose_file_list)):
+                if (left_index, right_index) in handled_data_list or \
+                        (right_index, left_index) in handled_data_list:
+                    continue
+                right_base_name = os.path.basename(right_file)
+                right_pure_name = right_base_name.replace('.jpg', '')
+                right_name_list = right_pure_name.split('_')
+                right_main_name = '_'.join(right_name_list[0:3])
+                label = int(left_main_name == right_main_name)
+                data = {'left': left_base_name,
+                        'right': right_base_name,
+                        'label': label}
+                data_list.append(data)
+                handled_data_list.append((left_index, right_index))
+        print(len(data_list))
+        label_data = pd.DataFrame(data_list)
+        label_data.to_csv(label_file, encoding='utf-8', index=False)

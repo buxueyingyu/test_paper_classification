@@ -14,7 +14,7 @@ from data.data_process import DataProcessor
 from keras_cls.train import \
     train_image_classification_model, Image_Classification_Parameter
 from keras_cls.inference import get_image_classification_inference
-
+from keras_cls.generator.generator_builder import get_generator
 
 def get_config():
     config_file = r'./config/data_config.json'
@@ -158,6 +158,35 @@ def train():
     train_image_classification_model(img_cls_params)
 
 
+def test_data_generator():
+    config = get_config()
+    root_path = config.get('root_folder', '/data/math_research/test_paper_cls/')
+    try:
+        home_path = os.environ['HOME']
+        root_path = os.path.join(home_path,
+                                 root_path[1:])
+    except:
+        pass
+    dataset_path = config.get('dataset_folder', 'dataset')
+    train_folder = config.get('train_folder', 'train')
+    train_path = os.path.join(root_path, dataset_path, train_folder)
+    train_data_file = os.path.join(root_path, dataset_path, config.get('train_data_file', 'train.csv'))
+    model_folder = config.get('model_folder', 'model')
+
+    img_cls_params = Image_Classification_Parameter()
+    img_cls_params.checkpoints = os.path.join(root_path, model_folder)
+    os.makedirs(img_cls_params.checkpoints, exist_ok=True)
+    img_cls_params.label_file = train_data_file
+    img_cls_params.dataset_dir = train_path
+    img_cls_params.backbone = r'EfficientNetB5'
+    img_cls_params.progressive_resizing = [(456, 456)]
+    img_cls_params.epochs = 100
+    img_cls_params.batch_size = 8
+    train_generator, val_generator = get_generator(img_cls_params)
+    train_generator_tqdm = tqdm(enumerate(train_generator), total=len(train_generator))
+    for batch_index, (batch_imgs, batch_labels) in train_generator_tqdm:
+        print(len(batch_imgs))
+
 def validate_image_classification():
     config = get_config()
     root_path = config.get('root_folder', '/data/math_research/test_paper_cls/')
@@ -228,4 +257,5 @@ if __name__ == '__main__':
     # compress_image_by_byte()
     # split_train_test()
     # train()
-    validate_image_classification()
+    # validate_image_classification()
+    test_data_generator()
