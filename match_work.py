@@ -41,10 +41,12 @@ def get_image_classification_parameter(data_mode: str = 'train'):
     img_cls_params.init_lr = 1e-4
     img_cls_params.optimizer = 'SAM-Adam'
     img_cls_params.num_classes = 2
-    img_cls_params.backbone = r'EfficientNetB5'
-    img_cls_params.progressive_resizing = [(456, 456)]
+
+    # 目前的p3.2xlarge EC2，只能使用EfficienetNetB4 + 4 batch size进行训练，否则会显存溢出
+    img_cls_params.backbone = r'EfficientNetB4'
+    img_cls_params.progressive_resizing = [(380, 380)]
+    img_cls_params.batch_size = 4
     img_cls_params.epochs = 100
-    img_cls_params.batch_size = 1
     return img_cls_params
 
 
