@@ -51,7 +51,7 @@ class MatchNet:
         models = Model(inputs=[image_left.input, image_right.input], outputs=fc3)
         return models
 
-    def train_image_classification_model(self):
+    def train(self):
         assert self.img_cls_params.label_file and os.path.exists(self.img_cls_params.label_file)
         assert self.img_cls_params.dataset_dir and os.path.exists(self.img_cls_params.dataset_dir)
         # set mixed_precision to float16
@@ -208,3 +208,14 @@ class MatchNet:
             print("wrong_pred_result:{}".format(wrong_pred_result))
         except:
             pass
+
+
+class Inference_Baseline:
+    def __init__(self, ):
+        self.transform = A.Compose([
+            A.CLAHE(clip_limit=4.0, tile_grid_size=(4, 4), p=1.0),
+        ])
+
+    def distort(self, img):
+        img = self.transform(image=img)['image']
+        return img

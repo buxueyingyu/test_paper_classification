@@ -12,7 +12,7 @@ from keras_cls.utils.preprocess import normalize, resize_img
 from keras_cls.train import Image_Classification_Parameter
 
 from keras_match.model.match_net import MatchNet
-from keras_match.generator.default_generator import DefaultGenerator
+from keras_match.model.match_net_inference import MatchNetInference
 from keras_match.generator.generator_builder import get_generator
 
 
@@ -114,11 +114,27 @@ def test_data_generator():
 def train_match_model():
     image_classification_parameter = get_image_classification_parameter(data_mode='train')
     match_net = MatchNet(img_cls_params=image_classification_parameter)
-    match_net.train_image_classification_model()
+    match_net.train()
+
+
+def validate():
+    img_cls_param = get_image_classification_parameter(data_mode='test')
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param)
+    match_net_inference.validate(img_cls_param.label_file)
+
+def predict():
+    image_path = r'/data/math_research/test_paper_cls/dataset/test/'
+    image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
+    img_cls_param = get_image_classification_parameter(data_mode='test')
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param)
+    for index, image_pair in enumerate(tqdm(image_pair_list)):
+        match_net_inference.predict(os.path.join(image_path, image_pair[0]),
+                                    os.path.join(image_path, image_pair[1]))
 
 
 if __name__ == '__main__':
     # test_match_net()
     # generate_match_data()
     # test_data_generator()
-    train_match_model()
+    # train_match_model()
+    predict()
