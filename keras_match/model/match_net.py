@@ -84,6 +84,7 @@ class MatchNet:
         # show_classes_hist(train_generator.class_counts, train_generator.class_names)
 
         model = self.get_match_net()
+        print(model.summary())
         loss_fn = get_losses(self.img_cls_params)
         optimizer = get_optimizer(self.img_cls_params)
 
@@ -125,7 +126,7 @@ class MatchNet:
                 train_generator.set_img_size(img_size)
                 print("progressive resizing:", img_size)
             train_loss = 0
-            train_generator_tqdm = tqdm(enumerate(train_generator), total=len(train_generator))
+            train_generator_tqdm = tqdm(enumerate(train_generator), total=len(train_generator), ncols=200)
             for batch_index, (batch_imgs, batch_labels) in train_generator_tqdm:
                 with tf.GradientTape() as tape:
                     model_outputs = model([batch_imgs[:, 0], batch_imgs[:, 1]], training=True)
@@ -151,6 +152,10 @@ class MatchNet:
                                                                      train_loss / (batch_index + 1),
                                                                      optimizer.learning_rate.numpy()))
             train_generator.on_epoch_end()
+            # try:
+            #     train_generator_tqdm.close()
+            # except:
+            #     pass
 
             # with train_writer.as_default():
             #     tf.summary.scalar("train_loss-val_loss", train_loss / (len(train_generator) * args.batch_size), step=epoch)
@@ -161,7 +166,7 @@ class MatchNet:
                 val_acc = 0
                 num_img = 0
                 cur_val_loss = cur_val_acc = 0
-                val_generator_tqdm = tqdm(enumerate(val_generator), total=len(val_generator))
+                val_generator_tqdm = tqdm(enumerate(val_generator), total=len(val_generator), ncols=200)
                 for batch_index, (batch_imgs, batch_labels) in val_generator_tqdm:
                     model_outputs = model([batch_imgs[:, 0], batch_imgs[:, 1]])
                     total_loss = loss_fn(batch_labels, model_outputs)
@@ -192,6 +197,11 @@ class MatchNet:
                                                             cur_val_acc,
                                                             best_val_epoch))
                     model.save_weights(best_weight_path)
+
+                # try:
+                #     val_generator_tqdm.close()
+                # except:
+                #     pass
 
             cur_time = time.perf_counter()
             one_epoch_time = cur_time - epoch_start_time
