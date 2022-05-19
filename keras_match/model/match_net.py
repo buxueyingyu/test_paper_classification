@@ -8,7 +8,7 @@ from sklearn import metrics as sklearn_metrics
 import time
 from tqdm import tqdm
 import tensorflow as tf
-from tensorflow.keras.layers import Concatenate, Flatten, Dense, Activation
+from tensorflow.keras.layers import Concatenate, Flatten, Dense, Activation, Input
 from tensorflow.keras import Model
 from tensorflow.keras.activations import softmax, sigmoid
 
@@ -26,8 +26,10 @@ from keras_cls.utils.lr_scheduler import get_lr_scheduler
 
 
 class MatchNet:
-    def __init__(self, img_cls_params: Image_Classification_Parameter):
+    def __init__(self, img_cls_params: Image_Classification_Parameter, single_backbone: bool = False):
         self.img_cls_params = img_cls_params
+        self.single_backbone = single_backbone
+        # self.bertish = AutoModel('effcientNet')
 
     def get_input_model(self):
         model = get_model(self.img_cls_params,
@@ -36,19 +38,36 @@ class MatchNet:
         return model
 
     def get_match_net(self):
-        image_left = self.get_input_model()
-        image_right = self.get_input_model()
-        # fci = merge([input1.output, input2.output])
-        fci = Concatenate()([image_left.output, image_right.output])
-        fc0 = Flatten()(fci)
-        fc1 = Dense(1024, activation='relu')(fc0)
-        fc2 = Dense(1024, activation='relu')(fc1)
-        fc2 = class_head(fc2, self.img_cls_params.num_classes, 512, dropout=self.img_cls_params.dropout)
-        if self.img_cls_params.loss == 'ce' or self.img_cls_params.num_classes > 2:
-            fc3 = Activation(softmax, dtype='float32', name="predictions")(fc2)
+        if self.single_backbone:
+            input_shape = (None, None, 3)
+            backbone_model = self.get_input_model()
+            left_input = Input(shape=input_shape, name='left_input')
+            right_input = Input(shape=input_shape, name='right_input')
+            left_output = backbone_model(left_input)
+            right_output = backbone_model(right_input)
+            fci = Concatenate()([left_output, right_output])
+            fc0 = Flatten()(fci)
+            fc1 = Dense(1024, activation='relu')(fc0)
+            fc2 = Dense(1024, activation='relu')(fc1)
+            fc2 = class_head(fc2, self.img_cls_params.num_classes, 512, dropout=self.img_cls_params.dropout)
+            if self.img_cls_params.loss == 'ce' or self.img_cls_params.num_classes > 2:
+                fc3 = Activation(softmax, dtype='float32', name="predictions")(fc2)
+            else:
+                fc3 = Activation(sigmoid, dtype='float32', name="predictions")(fc2)
+            models = Model(inputs=[left_input, right_input], outputs=fc3, name='double_tower_single_backbone')
         else:
-            fc3 = Activation(sigmoid, dtype='float32', name="predictions")(fc2)
-        models = Model(inputs=[image_left.input, image_right.input], outputs=fc3)
+            left_backbone = self.get_input_model()
+            right_backbone = self.get_input_model()
+            fci = Concatenate()([left_backbone.output, right_backbone.output])
+            fc0 = Flatten()(fci)
+            fc1 = Dense(1024, activation='relu')(fc0)
+            fc2 = Dense(1024, activation='relu')(fc1)
+            fc2 = class_head(fc2, self.img_cls_params.num_classes, 512, dropout=self.img_cls_params.dropout)
+            if self.img_cls_params.loss == 'ce' or self.img_cls_params.num_classes > 2:
+                fc3 = Activation(softmax, dtype='float32', name="predictions")(fc2)
+            else:
+                fc3 = Activation(sigmoid, dtype='float32', name="predictions")(fc2)
+            models = Model(inputs=[left_backbone.input, right_backbone.input], outputs=fc3, name='double_tower_double_backbone')
         return models
 
     def train(self):

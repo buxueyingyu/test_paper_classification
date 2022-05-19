@@ -52,7 +52,7 @@ def get_image_classification_parameter(data_mode: str = 'train'):
 
 def test_match_net():
     image_classification_parameter = get_image_classification_parameter(data_mode='train')
-    match_net = MatchNet(image_classification_parameter)
+    match_net = MatchNet(img_cls_params=image_classification_parameter, single_backbone=False)
 
     root_path = r'/data/math_research/test_paper_cls/dataset/train/'
     image_file_list = (r'paper_20220506_2_2.jpg', r'paper_20220506_2_4.jpg')
@@ -113,28 +113,28 @@ def test_data_generator():
 
 def train_match_model():
     image_classification_parameter = get_image_classification_parameter(data_mode='train')
-    match_net = MatchNet(img_cls_params=image_classification_parameter)
+    match_net = MatchNet(img_cls_params=image_classification_parameter, single_backbone=False)
     match_net.train()
 
 
 def validate():
     img_cls_param = get_image_classification_parameter(data_mode='test')
-    match_net_inference = MatchNetInference(img_cls_params=img_cls_param)
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param, single_backbone=False)
     match_net_inference.validate(img_cls_param.label_file)
 
 def predict():
     image_path = r'/data/math_research/test_paper_cls/dataset/test/'
     image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
     img_cls_param = get_image_classification_parameter(data_mode='test')
-    match_net_inference = MatchNetInference(img_cls_params=img_cls_param)
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param, single_backbone=False)
     for index, image_pair in enumerate(tqdm(image_pair_list)):
         match_net_inference.predict(os.path.join(image_path, image_pair[0]),
                                     os.path.join(image_path, image_pair[1]))
 
 
 if __name__ == '__main__':
-    # test_match_net()
+    test_match_net()
     # generate_match_data()
     # test_data_generator()
     # train_match_model()
-    predict()
+    # predict()

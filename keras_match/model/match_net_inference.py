@@ -14,7 +14,7 @@ from keras_cls.utils.preprocess import normalize, resize_img
 from keras_match.model.match_net import MatchNet
 
 class MatchNetInference:
-    def __init__(self, img_cls_params: Image_Classification_Parameter):
+    def __init__(self, img_cls_params: Image_Classification_Parameter, single_backbone: bool = False):
         self.para = img_cls_params
         checkpoints = img_cls_params.checkpoints
         self.tag2idx = None
@@ -31,7 +31,7 @@ class MatchNetInference:
                                     for index, line
                                     in enumerate(lines)
                                     if len(line.strip()) > 0}
-        match_net = MatchNet(img_cls_params)
+        match_net = MatchNet(img_cls_params, single_backbone=single_backbone)
         self.model = match_net.get_match_net()
         local_weights = img_cls_params.local_weights
         if local_weights and isinstance(local_weights, str) and os.path.exists(local_weights):
