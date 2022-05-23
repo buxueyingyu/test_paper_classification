@@ -31,10 +31,12 @@ class SimpleMatchNet:
     def __init__(self,
                  img_cls_params: Image_Classification_Parameter,
                  with_simple_network: bool = True,
+                 last_dense_size: bool = 4096,
                  single_backbone: bool = False):
         self.img_cls_params = img_cls_params
         self.img_cls_params.init_lr = 10e-4
         self.with_simple_network = with_simple_network
+        self.last_dense_size = last_dense_size
         self.single_backbone = single_backbone
         base_size = self.img_cls_params.progressive_resizing[0]
         self.input_shape = (base_size[0], base_size[1], 3)
@@ -76,7 +78,7 @@ class SimpleMatchNet:
 
         convolutional_net.add(Flatten())
         convolutional_net.add(
-            Dense(units=2048, activation='sigmoid',
+            Dense(units=self.last_dense_size, activation='sigmoid',
                   kernel_regularizer=l2(
                       self.l2_penalization['Dense1']),
                   name='Dense1'))

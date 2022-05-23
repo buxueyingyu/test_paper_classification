@@ -187,6 +187,7 @@ def train_simple_match_model():
 
     match_net = SimpleMatchNet(img_cls_params=image_classification_parameter,
                                with_simple_network=True,
+                               last_dense_size=4096,
                                single_backbone=True)
     match_net.train()
 
@@ -200,6 +201,7 @@ def validate_simple_match_model():
     match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
                                             is_simple_net=True,
                                             with_simple_network=True,
+                                            last_dense_size=4096,
                                             single_backbone=True)
     match_net_inference.validate(img_cls_param.label_file)
 
@@ -215,6 +217,7 @@ def predict_simple_match_model():
     match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
                                             is_simple_net=True,
                                             with_simple_network=True,
+                                            last_dense_size=4096,
                                             single_backbone=True)
     for index, image_pair in enumerate(tqdm(image_pair_list)):
         print(match_net_inference.predict(os.path.join(image_path, image_pair[0]),

@@ -19,6 +19,7 @@ class MatchNetInference:
                  img_cls_params: Image_Classification_Parameter,
                  is_simple_net: bool = True,
                  with_simple_network: bool = True,
+                 last_dense_size=4096,
                  single_backbone: bool = False):
         self.para = img_cls_params
         checkpoints = img_cls_params.checkpoints
@@ -40,6 +41,7 @@ class MatchNetInference:
         if is_simple_net:
             match_net = SimpleMatchNet(img_cls_params=img_cls_params,
                                        with_simple_network=with_simple_network,
+                                       last_dense_size=last_dense_size,
                                        single_backbone=single_backbone)
         else:
             match_net = MatchNet(img_cls_params, single_backbone=single_backbone)
