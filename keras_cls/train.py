@@ -51,7 +51,8 @@ class Image_Classification_Parameter:
                  start_eval_epoch: int = 1,
                  accumulated_gradient_num: int = 1,
                  local_weights: str = None,
-                 checkpoints: str = r'./checkpoints'):
+                 checkpoints: str = r'./checkpoints',
+                 is_simple_network: bool = False):
         self.epochs = epochs
         self.batch_size = batch_size
         img_size_list = []
@@ -83,6 +84,7 @@ class Image_Classification_Parameter:
         self.accumulated_gradient_num = accumulated_gradient_num
         self.checkpoints = checkpoints
         self.local_weights = local_weights
+        self.is_simple_network = is_simple_network
 
 
 def parse_args(args):

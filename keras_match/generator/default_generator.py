@@ -114,7 +114,6 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                 else:
                     left_img = normalize(left_img, mode='tf')
                     right_img = normalize(right_img, mode='tf')
-
                 batch_imgs.append((left_img, right_img))
                 one_hot_batch_labels[valid_index, batch_labels[i]] = 1
                 valid_index += 1

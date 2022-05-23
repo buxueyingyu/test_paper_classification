@@ -12,9 +12,14 @@ from keras_cls.train import Image_Classification_Parameter
 from keras_cls.utils.common import get_best_model_path
 from keras_cls.utils.preprocess import normalize, resize_img
 from keras_match.model.match_net import MatchNet
+from keras_match.model.simple_match_net import SimpleMatchNet
 
 class MatchNetInference:
-    def __init__(self, img_cls_params: Image_Classification_Parameter, single_backbone: bool = False):
+    def __init__(self,
+                 img_cls_params: Image_Classification_Parameter,
+                 is_simple_net: bool = True,
+                 with_simple_network: bool = True,
+                 single_backbone: bool = False):
         self.para = img_cls_params
         checkpoints = img_cls_params.checkpoints
         self.tag2idx = None
@@ -31,19 +36,29 @@ class MatchNetInference:
                                     for index, line
                                     in enumerate(lines)
                                     if len(line.strip()) > 0}
-        match_net = MatchNet(img_cls_params, single_backbone=single_backbone)
-        self.model = match_net.get_match_net()
-        local_weights = img_cls_params.local_weights
-        if local_weights and isinstance(local_weights, str) and os.path.exists(local_weights):
-            print(f'local weights: {local_weights}')
-            self.model.load_weights(local_weights)
+        self.is_simple_net = is_simple_net
+        if is_simple_net:
+            match_net = SimpleMatchNet(img_cls_params=img_cls_params,
+                                       with_simple_network=with_simple_network,
+                                       single_backbone=single_backbone)
         else:
-            checkpoints = img_cls_params.checkpoints
-            if checkpoints and isinstance(checkpoints, str) and os.path.exists(checkpoints):
-                local_weights = get_best_model_path(checkpoints)
+            match_net = MatchNet(img_cls_params, single_backbone=single_backbone)
+        self.model = match_net.get_match_net()
+        try:
+            local_weights = img_cls_params.local_weights
+            if local_weights and isinstance(local_weights, str) and os.path.exists(local_weights):
+                print(f'local weights: {local_weights}')
                 self.model.load_weights(local_weights)
-                print(f'table classification checkpoints: {checkpoints}, local weights: {local_weights}')
-        self.local_weights = local_weights
+            else:
+                checkpoints = img_cls_params.checkpoints
+                if checkpoints and isinstance(checkpoints, str) and os.path.exists(checkpoints):
+                    local_weights = get_best_model_path(checkpoints)
+                    if local_weights:
+                        self.model.load_weights(local_weights)
+                        print(f'table classification checkpoints: {checkpoints}, local weights: {local_weights}')
+            self.local_weights = local_weights
+        except:
+            pass
         self.baseline = Inference_Baseline()
 
     def validate(self, validate_data_file: str):
@@ -115,7 +130,9 @@ class MatchNetInference:
             detail_path = os.path.join(report_folder, detail_file)
             detail_df.to_csv(detail_path, sep=',', encoding='utf-8', index=False)
 
-    def predict(self, left_image_path: str, right_image_path: str):
+    def predict(self,
+                left_image_path: str,
+                right_image_path: str):
         """
 
         Args:
@@ -127,9 +144,14 @@ class MatchNetInference:
         """
         left_image = self.get_image_data(image_path=left_image_path)
         right_image = self.get_image_data(image_path=right_image_path)
-        pred_result = self.model.predict_on_batch([left_image, right_image])
-        pred_cls = np.argmax(pred_result, axis=-1)
-        return pred_cls[0]
+        batch_images = np.array([(left_image, right_image)])
+        pred_result = self.model([batch_images[:, 0], batch_images[:, 1]])
+        if pred_result.shape == (1, 1):
+            pred_cls = int(pred_result[0][0] >= 0.51)
+            return pred_cls
+        else:
+            pred_cls = np.argmax(pred_result, axis=-1)
+            return pred_cls[0]
 
     def get_image_data(self, image_path):
         image = np.ascontiguousarray(Image.open(image_path).convert('RGB'))

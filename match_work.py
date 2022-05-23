@@ -12,11 +12,16 @@ from keras_cls.utils.preprocess import normalize, resize_img
 from keras_cls.train import Image_Classification_Parameter
 
 from keras_match.model.match_net import MatchNet
+from keras_match.model.simple_match_net import SimpleMatchNet
 from keras_match.model.match_net_inference import MatchNetInference
 from keras_match.generator.generator_builder import get_generator
 
 
-def get_image_classification_parameter(data_mode: str = 'train'):
+def get_image_classification_parameter(data_mode: str = 'train',
+                                       loss='ce',
+                                       init_lr=1e-4,
+                                       num_classes: int = 2,
+                                       is_simple_network: bool = False):
     config = get_config()
     root_path = config.get('root_folder', '/data/math_research/test_paper_cls/')
     try:
@@ -38,14 +43,15 @@ def get_image_classification_parameter(data_mode: str = 'train'):
     os.makedirs(img_cls_params.checkpoints, exist_ok=True)
     img_cls_params.label_file = data_file
     img_cls_params.dataset_dir = data_path
-    img_cls_params.init_lr = 1e-4
+    img_cls_params.init_lr = init_lr
+    img_cls_params.loss = loss
     img_cls_params.optimizer = 'SAM-Adam'
-    img_cls_params.num_classes = 2
-
+    img_cls_params.num_classes = num_classes
+    img_cls_params.is_simple_network = is_simple_network
     # 目前的p3.2xlarge EC2，只能使用EfficienetNetB4 + 4 batch size进行训练，否则会显存溢出
     img_cls_params.backbone = r'EfficientNetB4'
-    img_cls_params.progressive_resizing = [(380, 380)]
-    img_cls_params.batch_size = 4
+    img_cls_params.progressive_resizing = [(256, 256)]
+    img_cls_params.batch_size = 8
     img_cls_params.epochs = 100
     return img_cls_params
 
@@ -122,6 +128,7 @@ def validate():
     match_net_inference = MatchNetInference(img_cls_params=img_cls_param, single_backbone=True)
     match_net_inference.validate(img_cls_param.label_file)
 
+
 def predict():
     image_path = r'/data/math_research/test_paper_cls/dataset/test/'
     image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
@@ -132,9 +139,95 @@ def predict():
                                     os.path.join(image_path, image_pair[1]))
 
 
+def test_simple_match_net():
+    image_classification_parameter = get_image_classification_parameter(data_mode='train')
+    match_net = SimpleMatchNet(img_cls_params=image_classification_parameter,
+                               with_simple_network=True,
+                               single_backbone=True)
+
+    root_path = r'/data/math_research/test_paper_cls/dataset/train/'
+    image_file_list = [(r'paper_20220506_2_2.jpg', r'paper_20220506_5_origin.jpg'),
+                       (r'paper_20220506_7_8.jpg', r'paper_20220506_47_origin.jpg')]
+    img_size = match_net.img_cls_params.progressive_resizing[0]
+    batch_images = []
+    for left_image_file, right_image_file in image_file_list:
+        left_image_path = os.path.join(root_path, left_image_file)
+        left_image = get_image_data(left_image_path, img_size)
+
+        right_image_path = os.path.join(root_path, right_image_file)
+        right_image = get_image_data(right_image_path, img_size)
+
+        batch_images.append((left_image, right_image))
+    batch_images = np.array(batch_images)
+    model = match_net.get_match_net()
+    print(model.summary())
+    pred_result = model([batch_images[:, 0], batch_images[:, 1]])
+    # pred_result = model.predict_on_batch(image_list)
+    # print(pred_result)
+    pred_cls = np.argmax(pred_result, axis=-1)
+    print(pred_cls)
+
+    print("hello")
+
+
+def get_image_data(image_file: str, image_size: tuple):
+    image = np.ascontiguousarray(Image.open(image_file).convert('RGB'))
+    image, _, _ = resize_img(image, image_size)
+    image = normalize(image, mode='tf')
+    return image
+
+
+def train_simple_match_model():
+    image_classification_parameter = get_image_classification_parameter(data_mode='train',
+                                                                        loss='ce',
+                                                                        init_lr=10e-4,
+                                                                        num_classes=2,
+                                                                        is_simple_network=True
+                                                                        )
+
+    match_net = SimpleMatchNet(img_cls_params=image_classification_parameter,
+                               with_simple_network=True,
+                               single_backbone=True)
+    match_net.train()
+
+
+def validate_simple_match_model():
+    img_cls_param = get_image_classification_parameter(data_mode='train',
+                                                       loss='ce',
+                                                       init_lr=10e-4,
+                                                       num_classes=2,
+                                                       is_simple_network=True)
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
+                                            is_simple_net=True,
+                                            with_simple_network=True,
+                                            single_backbone=True)
+    match_net_inference.validate(img_cls_param.label_file)
+
+
+def predict_simple_match_model():
+    image_path = r'/data/math_research/test_paper_cls/dataset/test/'
+    image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
+    img_cls_param = get_image_classification_parameter(data_mode='train',
+                                                       loss='ce',
+                                                       init_lr=10e-4,
+                                                       num_classes=2,
+                                                       is_simple_network=True)
+    match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
+                                            is_simple_net=True,
+                                            with_simple_network=True,
+                                            single_backbone=True)
+    for index, image_pair in enumerate(tqdm(image_pair_list)):
+        print(match_net_inference.predict(os.path.join(image_path, image_pair[0]),
+                                          os.path.join(image_path, image_pair[1])))
+
+
 if __name__ == '__main__':
     # test_match_net()
     # generate_match_data()
     # test_data_generator()
-    train_match_model()
+    # train_match_model()
     # predict()
+    # validate()
+    # predict_simple_match_model()
+    # test_simple_match_net()
+    train_simple_match_model()

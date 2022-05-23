@@ -8,9 +8,10 @@ from sklearn import metrics as sklearn_metrics
 import time
 from tqdm import tqdm
 import tensorflow as tf
-from tensorflow.keras.layers import Concatenate, Flatten, Dense, Activation, Input
-from tensorflow.keras import Model
+from tensorflow.keras.layers import Conv2D, MaxPool2D, Flatten, Dense, Input, Subtract, Lambda
+from tensorflow.keras import Model, Sequential
 from tensorflow.keras.activations import softmax, sigmoid
+from tensorflow.keras.regularizers import l2
 import tensorflow.keras.backend as K
 
 from keras_cls.model.model_builder import get_model
@@ -26,13 +27,62 @@ from keras_cls.utils.lr_finder import LRFinder
 from keras_cls.utils.lr_scheduler import get_lr_scheduler
 
 
-class MatchNet:
-    def __init__(self, img_cls_params: Image_Classification_Parameter, single_backbone: bool = False):
+class SimpleMatchNet:
+    def __init__(self,
+                 img_cls_params: Image_Classification_Parameter,
+                 with_simple_network: bool = True,
+                 single_backbone: bool = False):
         self.img_cls_params = img_cls_params
+        self.img_cls_params.init_lr = 10e-4
+        self.with_simple_network = with_simple_network
         self.single_backbone = single_backbone
-        # self.bertish = AutoModel('effcientNet')
+        base_size = self.img_cls_params.progressive_resizing[0]
+        self.input_shape = (base_size[0], base_size[1], 3)
+        self.l2_penalization = {'Conv1': 1e-2,
+                                'Conv2': 1e-2,
+                                'Conv3': 1e-2,
+                                'Conv4': 1e-2,
+                                'Dense1': 1e-4}
 
-    def get_input_model(self):
+    def get_simple_network(self):
+        convolutional_net = Sequential()
+        convolutional_net.add(Conv2D(filters=64, kernel_size=(10, 10),
+                                     activation='relu',
+                                     input_shape=self.input_shape,
+                                     kernel_regularizer=l2(
+                                         self.l2_penalization['Conv1']),
+                                     name='Conv1'))
+        convolutional_net.add(MaxPool2D())
+
+        convolutional_net.add(Conv2D(filters=128, kernel_size=(7, 7),
+                                     activation='relu',
+                                     kernel_regularizer=l2(
+                                         self.l2_penalization['Conv2']),
+                                     name='Conv2'))
+        convolutional_net.add(MaxPool2D())
+
+        convolutional_net.add(Conv2D(filters=128, kernel_size=(4, 4),
+                                     activation='relu',
+                                     kernel_regularizer=l2(
+                                         self.l2_penalization['Conv3']),
+                                     name='Conv3'))
+        convolutional_net.add(MaxPool2D())
+
+        convolutional_net.add(Conv2D(filters=256, kernel_size=(4, 4),
+                                     activation='relu',
+                                     kernel_regularizer=l2(
+                                         self.l2_penalization['Conv4']),
+                                     name='Conv4'))
+
+        convolutional_net.add(Flatten())
+        convolutional_net.add(
+            Dense(units=2048, activation='sigmoid',
+                  kernel_regularizer=l2(
+                      self.l2_penalization['Dense1']),
+                  name='Dense1'))
+        return convolutional_net
+
+    def get_efficientnet_network(self):
         model = get_model(self.img_cls_params,
                           num_class=self.img_cls_params.num_classes,
                           include_top=False)
@@ -40,35 +90,43 @@ class MatchNet:
 
     def get_match_net(self):
         if self.single_backbone:
-            input_shape = (None, None, 3)
-            backbone_model = self.get_input_model()
-            left_input = Input(shape=input_shape, name='left_input')
-            right_input = Input(shape=input_shape, name='right_input')
+            if self.with_simple_network:
+                backbone_model = self.get_simple_network()
+            else:
+                backbone_model = self.get_efficientnet_network()
+            left_input = Input(shape=self.input_shape, name='left_input')
+            right_input = Input(shape=self.input_shape, name='right_input')
             left_output = backbone_model(left_input)
             right_output = backbone_model(right_input)
-            fci = Concatenate()([left_output, right_output])
-            fc0 = Flatten()(fci)
-            fc1 = Dense(1024, activation='relu')(fc0)
-            fc2 = Dense(1024, activation='relu')(fc1)
-            fc2 = class_head(fc2, self.img_cls_params.num_classes, 512, dropout=self.img_cls_params.dropout)
-            if self.img_cls_params.loss == 'ce' or self.img_cls_params.num_classes > 2:
-                fc3 = Activation(softmax, dtype='float32', name="predictions")(fc2)
-            else:
-                fc3 = Activation(sigmoid, dtype='float32', name="predictions")(fc2)
-            models = Model(inputs=[left_input, right_input], outputs=fc3, name='double_tower_single_backbone')
+            # L1 distance layer between the two encoded outputs
+            # One could use Subtract from Keras, but we want the absolute value
+            l1_distance_layer = Lambda(
+                lambda tensors: K.abs(tensors[0] - tensors[1]))
+            l1_distance = l1_distance_layer([left_output, right_output])
+
+            # Same class or not prediction
+            prediction = Dense(self.img_cls_params.num_classes, activation='softmax')(l1_distance)
+
+            models = Model(inputs=[left_input, right_input],
+                           outputs=prediction,
+                           name='double_tower_single_backbone')
         else:
-            left_backbone = self.get_input_model()
-            right_backbone = self.get_input_model()
-            fci = Concatenate()([left_backbone.output, right_backbone.output])
-            fc0 = Flatten()(fci)
-            fc1 = Dense(1024, activation='relu')(fc0)
-            fc2 = Dense(1024, activation='relu')(fc1)
-            fc2 = class_head(fc2, self.img_cls_params.num_classes, 512, dropout=self.img_cls_params.dropout)
-            if self.img_cls_params.loss == 'ce' or self.img_cls_params.num_classes > 2:
-                fc3 = Activation(softmax, dtype='float32', name="predictions")(fc2)
+            if self.with_simple_network:
+                left_backbone = self.get_simple_network()
+                right_backbone = self.get_simple_network()
             else:
-                fc3 = Activation(sigmoid, dtype='float32', name="predictions")(fc2)
-            models = Model(inputs=[left_backbone.input, right_backbone.input], outputs=fc3, name='double_tower_double_backbone')
+                left_backbone = self.get_efficientnet_network()
+                right_backbone = self.get_efficientnet_network()
+            # L1 distance layer between the two encoded outputs
+            # One could use Subtract from Keras, but we want the absolute value
+            l1_distance_layer = Lambda(
+                lambda tensors: K.abs(tensors[0] - tensors[1]))
+            l1_distance = l1_distance_layer([left_backbone.output, right_backbone.output])
+            # Same class or not prediction
+            prediction = Dense(self.img_cls_params.num_classes, activation='softmax')(l1_distance)
+            models = Model(inputs=[left_backbone.input, right_backbone.input],
+                           outputs=prediction,
+                           name='double_tower_double_backbone')
         return models
 
     def train(self):
@@ -238,14 +296,3 @@ class MatchNet:
             print("wrong_pred_result:{}".format(wrong_pred_result))
         except:
             pass
-
-
-class Inference_Baseline:
-    def __init__(self, ):
-        self.transform = A.Compose([
-            A.CLAHE(clip_limit=4.0, tile_grid_size=(4, 4), p=1.0),
-        ])
-
-    def distort(self, img):
-        img = self.transform(image=img)['image']
-        return img
