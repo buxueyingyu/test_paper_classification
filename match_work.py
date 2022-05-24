@@ -20,7 +20,9 @@ from keras_match.generator.generator_builder import get_generator
 def get_image_classification_parameter(data_mode: str = 'train',
                                        loss='ce',
                                        init_lr=1e-4,
+                                       progressive_resizing=[(256, 256)],
                                        num_classes: int = 2,
+                                       batch_size: int = 8,
                                        is_simple_network: bool = False):
     config = get_config()
     root_path = config.get('root_folder', '/data/math_research/test_paper_cls/')
@@ -50,8 +52,8 @@ def get_image_classification_parameter(data_mode: str = 'train',
     img_cls_params.is_simple_network = is_simple_network
     # 目前的p3.2xlarge EC2，只能使用EfficienetNetB4 + 4 batch size进行训练，否则会显存溢出
     img_cls_params.backbone = r'EfficientNetB4'
-    img_cls_params.progressive_resizing = [(256, 256)]
-    img_cls_params.batch_size = 8
+    img_cls_params.progressive_resizing = progressive_resizing
+    img_cls_params.batch_size = batch_size
     img_cls_params.epochs = 100
     return img_cls_params
 
@@ -179,29 +181,32 @@ def get_image_data(image_file: str, image_size: tuple):
 
 def train_simple_match_model():
     image_classification_parameter = get_image_classification_parameter(data_mode='train',
-                                                                        loss='ce',
-                                                                        init_lr=10e-4,
+                                                                        loss='bce',
+                                                                        init_lr=5e-4,
+                                                                        progressive_resizing=[(128, 128)],
                                                                         num_classes=2,
+                                                                        batch_size=16,
                                                                         is_simple_network=True
                                                                         )
-
     match_net = SimpleMatchNet(img_cls_params=image_classification_parameter,
                                with_simple_network=True,
-                               last_dense_size=4096,
+                               last_dense_size=256,
                                single_backbone=True)
     match_net.train()
 
 
 def validate_simple_match_model():
-    img_cls_param = get_image_classification_parameter(data_mode='train',
-                                                       loss='ce',
+    img_cls_param = get_image_classification_parameter(data_mode='test',
+                                                       loss='bce',
                                                        init_lr=10e-4,
+                                                       progressive_resizing=[(128, 128)],
                                                        num_classes=2,
+                                                       batch_size=8,
                                                        is_simple_network=True)
     match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
                                             is_simple_net=True,
                                             with_simple_network=True,
-                                            last_dense_size=4096,
+                                            last_dense_size=256,
                                             single_backbone=True)
     match_net_inference.validate(img_cls_param.label_file)
 
@@ -209,15 +214,17 @@ def validate_simple_match_model():
 def predict_simple_match_model():
     image_path = r'/data/math_research/test_paper_cls/dataset/test/'
     image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
-    img_cls_param = get_image_classification_parameter(data_mode='train',
-                                                       loss='ce',
+    img_cls_param = get_image_classification_parameter(data_mode='test',
+                                                       loss='bce',
                                                        init_lr=10e-4,
+                                                       progressive_resizing=[(128, 128)],
                                                        num_classes=2,
+                                                       batch_size=2,
                                                        is_simple_network=True)
     match_net_inference = MatchNetInference(img_cls_params=img_cls_param,
                                             is_simple_net=True,
                                             with_simple_network=True,
-                                            last_dense_size=4096,
+                                            last_dense_size=256,
                                             single_backbone=True)
     for index, image_pair in enumerate(tqdm(image_pair_list)):
         print(match_net_inference.predict(os.path.join(image_path, image_pair[0]),

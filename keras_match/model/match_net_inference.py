@@ -148,18 +148,15 @@ class MatchNetInference:
         right_image = self.get_image_data(image_path=right_image_path)
         batch_images = np.array([(left_image, right_image)])
         pred_result = self.model([batch_images[:, 0], batch_images[:, 1]])
-        if pred_result.shape == (1, 1):
-            pred_cls = int(pred_result[0][0] >= 0.51)
-            return pred_cls
-        else:
-            pred_cls = np.argmax(pred_result, axis=-1)
-            return pred_cls[0]
+        pred_cls = int(pred_result[0][0] < 0.5)
+        return pred_cls
 
     def get_image_data(self, image_path):
         image = np.ascontiguousarray(Image.open(image_path).convert('RGB'))
         image, _, _ = resize_img(image, self.para.progressive_resizing[0])
         image = self.baseline.distort(image)
-        image = normalize(image, mode='tf')
+        image = normalize(image, mode=None)
+        # image = image.reshape(image.shape[0], image.shape[1], 1)
         return image
 
     def predict_cls_name(self, image_path: str):

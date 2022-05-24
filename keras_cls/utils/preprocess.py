@@ -21,6 +21,8 @@ def normalize(img, mode=None):
     elif mode == 'caffe':  # caffe,bgr
         img=img.astype(np.float32)
         img -= [123.68, 116.779, 103.939]
+    else:
+        img = img / 255.
     return img
 
 def resize_img_aug(img, dst_size):

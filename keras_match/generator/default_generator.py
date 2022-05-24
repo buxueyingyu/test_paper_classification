@@ -13,8 +13,14 @@ from keras_cls.utils.preprocess import resize_img_aug, resize_img
 
 
 class DefaultGenerator(tf.keras.utils.Sequence):
-    def __init__(self, args, mode='train', train_valid_split_ratio=0.7, dataset_sample_ratio=1.0):
+    def __init__(self,
+                 args,
+                 mode='train',
+                 is_grey: bool = False,
+                 train_valid_split_ratio=0.7,
+                 dataset_sample_ratio=1.0):
         self.args = args
+        self.is_grey = is_grey
         self.dataset_dir = args.dataset_dir
         batch_size = args.batch_size
         augment = args.augment
@@ -89,7 +95,10 @@ class DefaultGenerator(tf.keras.utils.Sequence):
             self.data_index[batch_index * self.batch_size:(batch_index + 1) * self.batch_size]]
         batch_labels = self.label_list[
             self.data_index[batch_index * self.batch_size:(batch_index + 1) * self.batch_size]]
-        one_hot_batch_labels = np.zeros([len(batch_img_paths), self.num_class])
+        if self.args.loss == 'bce':
+            one_hot_batch_labels = np.zeros([len(batch_img_paths), 1])
+        else:
+            one_hot_batch_labels = np.zeros([len(batch_img_paths), self.num_class])
         batch_imgs = []
         if self.mode == "valid":
             valid_index = 0
@@ -104,21 +113,18 @@ class DefaultGenerator(tf.keras.utils.Sequence):
 
                 left_img = self.valid_resize_img(left_img)
                 right_img = self.valid_resize_img(right_img)
-                if self.args.weights:
-                    if self.args.backbone[0:3] == "Res":
-                        left_img = normalize(left_img, mode='caffe')
-                        right_img = normalize(right_img, mode='caffe')
-                    else:
-                        left_img = normalize(left_img, mode='tf')
-                        right_img = normalize(right_img, mode='tf')
-                else:
-                    left_img = normalize(left_img, mode='tf')
-                    right_img = normalize(right_img, mode='tf')
+
+                left_img = self.get_normalized_grey_image(left_img)
+                right_img = self.get_normalized_grey_image(right_img)
                 batch_imgs.append((left_img, right_img))
-                one_hot_batch_labels[valid_index, batch_labels[i]] = 1
+                if self.args.loss == 'bce':
+                    one_hot_batch_labels[i] = batch_labels[i]
+                else:
+                    one_hot_batch_labels[valid_index, batch_labels[i]] = 1
                 valid_index += 1
             batch_imgs = np.array(batch_imgs)
-            one_hot_batch_labels = one_hot_batch_labels[:valid_index]
+            if self.args.loss != 'bce':
+                one_hot_batch_labels = one_hot_batch_labels[:valid_index]
         else:
             valid_index = 0
             for i in range(len(batch_img_paths)):
@@ -141,23 +147,39 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                 elif self.augment == 'baseline':
                     left_img = self.baseline_augment.distort(left_img)
                     right_img = self.baseline_augment.distort(right_img)
-                if self.args.weights:
-                    if self.args.backbone[0:3] == "Res":
-                        left_img = normalize(left_img, mode='caffe')
-                        right_img = normalize(right_img, mode='caffe')
-                    else:
-                        left_img = normalize(left_img, mode='tf')
-                        right_img = normalize(right_img, mode='tf')
-                else:
-                    left_img = normalize(left_img, mode='tf')
-                    right_img = normalize(right_img, mode='tf')
+
+                left_img = self.get_normalized_grey_image(left_img)
+                right_img = self.get_normalized_grey_image(right_img)
                 batch_imgs.append((left_img, right_img))
-                one_hot_batch_labels[valid_index, batch_labels[i]] = 1
+                if self.args.loss == 'bce':
+                    one_hot_batch_labels[i] = batch_labels[i]
+                else:
+                    one_hot_batch_labels[valid_index, batch_labels[i]] = 1
                 valid_index += 1
             batch_imgs = np.array(batch_imgs)
-            one_hot_batch_labels = one_hot_batch_labels[:valid_index]
+            if self.args.loss != 'bce':
+                one_hot_batch_labels = one_hot_batch_labels[:valid_index]
 
         return batch_imgs, one_hot_batch_labels
+
+    def get_normalized_grey_image(self, image:np.ndarray):
+        # image = np.asarray(Image.fromarray(np.uint8(image)).convert('L'))
+        if self.args.weights:
+            if self.args.backbone[0:3] == "Res":
+                image = normalize(image, mode='caffe')
+            else:
+                if self.is_grey:
+                    image = normalize(image, mode=None)
+                else:
+                    image = normalize(image, mode='tf')
+        else:
+            if self.is_grey:
+                image = normalize(image, mode=None)
+            else:
+                image = normalize(image, mode='tf')
+
+        # image = image.reshape(image.shape[0], image.shape[1], 1)
+        return image
 
     def create_split_list(self, img_dir, model_dir, label_file: str, dataset_sample_ratio, mode):
         train_imgs_list = []
