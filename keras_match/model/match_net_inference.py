@@ -8,19 +8,17 @@ from sklearn import metrics as sklearn_metrics
 import time
 from tqdm import tqdm
 
-from keras_cls.train import Image_Classification_Parameter
+from keras_cls.train import Image_Tast_Parameter
 from keras_cls.utils.common import get_best_model_path
 from keras_cls.utils.preprocess import normalize, resize_img
 from keras_match.model.match_net import MatchNet
 from keras_match.model.simple_match_net import SimpleMatchNet
 
+
 class MatchNetInference:
     def __init__(self,
-                 img_cls_params: Image_Classification_Parameter,
-                 is_simple_net: bool = True,
-                 with_simple_network: bool = True,
-                 last_dense_size=4096,
-                 single_backbone: bool = False):
+                 img_cls_params: Image_Tast_Parameter,
+                 complex_cnn_last_dense_size=256):
         self.para = img_cls_params
         checkpoints = img_cls_params.checkpoints
         self.tag2idx = None
@@ -37,14 +35,9 @@ class MatchNetInference:
                                     for index, line
                                     in enumerate(lines)
                                     if len(line.strip()) > 0}
-        self.is_simple_net = is_simple_net
-        if is_simple_net:
-            match_net = SimpleMatchNet(img_cls_params=img_cls_params,
-                                       with_simple_network=with_simple_network,
-                                       last_dense_size=last_dense_size,
-                                       single_backbone=single_backbone)
-        else:
-            match_net = MatchNet(img_cls_params, single_backbone=single_backbone)
+        self.is_simple_net = img_cls_params.is_simple_network
+        match_net = SimpleMatchNet(img_task_params=img_cls_params,
+                                   complex_cnn_last_dense_size=complex_cnn_last_dense_size)
         self.model = match_net.get_match_net()
         try:
             local_weights = img_cls_params.local_weights
@@ -88,22 +81,26 @@ class MatchNetInference:
             right_image_name = row['right']
             right_image_path = os.path.join(self.para.dataset_dir, right_image_name)
             if os.path.exists(left_image_path) and os.path.exists(right_image_path):
-                ground_truth = self.tag2idx.get(label, 1)
-                prediction_value = self.predict(left_image_path, right_image_path)
-                print('{0}/{1} left mage: {2}, right image: {3}, ground truth: {4}, prediction: {5}'
-                      .format(index + 1,
-                              len(validate_data),
-                              left_image_name,
-                              right_image_name,
-                              self.idx2tag.get(ground_truth, 'N/A'),
-                              self.idx2tag.get(prediction_value, 'N/A')))
+                ground_truth = self.tag2idx.get(str(label), 1)
+                prediction_cls, prediction_value = self.predict(left_image_path,
+                                                                right_image_path,
+                                                                with_pred_value=True)
+                if ground_truth == 1:
+                    print('{0}/{1} left mage: {2}, right image: {3}, ground truth: {4}, prediction: {5}, prediction value: {6}'
+                          .format(index + 1,
+                                  len(validate_data),
+                                  left_image_name,
+                                  right_image_name,
+                                  self.idx2tag.get(ground_truth, 'N/A'),
+                                  self.idx2tag.get(prediction_cls, 'N/A'),
+                                  prediction_value))
 
                 true_list.append(ground_truth)
-                predict_list.append(prediction_value)
+                predict_list.append(prediction_cls)
                 data = {'left_image': left_image_name,
                         'right_image': right_image_name,
                         'ground_truth': self.idx2tag.get(ground_truth, 'N/A'),
-                        'prediction': self.idx2tag.get(prediction_value, 'N/A')}
+                        'prediction': self.idx2tag.get(prediction_cls, 'N/A')}
                 details.append(data)
         labels = [label for label in range(len(tags))]
         report = sklearn_metrics.classification_report(true_list,
@@ -134,7 +131,8 @@ class MatchNetInference:
 
     def predict(self,
                 left_image_path: str,
-                right_image_path: str):
+                right_image_path: str,
+                with_pred_value: bool = False):
         """
 
         Args:
@@ -149,7 +147,10 @@ class MatchNetInference:
         batch_images = np.array([(left_image, right_image)])
         pred_result = self.model([batch_images[:, 0], batch_images[:, 1]])
         pred_cls = int(pred_result[0][0] < 0.5)
-        return pred_cls
+        if with_pred_value:
+            return pred_cls, pred_result
+        else:
+            return pred_cls
 
     def get_image_data(self, image_path):
         image = np.ascontiguousarray(Image.open(image_path).convert('RGB'))

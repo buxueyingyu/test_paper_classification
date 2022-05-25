@@ -16,11 +16,9 @@ class DefaultGenerator(tf.keras.utils.Sequence):
     def __init__(self,
                  args,
                  mode='train',
-                 is_grey: bool = False,
                  train_valid_split_ratio=0.7,
                  dataset_sample_ratio=1.0):
         self.args = args
-        self.is_grey = is_grey
         self.dataset_dir = args.dataset_dir
         batch_size = args.batch_size
         augment = args.augment
@@ -165,18 +163,18 @@ class DefaultGenerator(tf.keras.utils.Sequence):
     def get_normalized_grey_image(self, image:np.ndarray):
         # image = np.asarray(Image.fromarray(np.uint8(image)).convert('L'))
         if self.args.weights:
-            if self.args.backbone[0:3] == "Res":
+            if self.args.backbone and self.args.backbone[0:3] == "Res":
                 image = normalize(image, mode='caffe')
             else:
-                if self.is_grey:
-                    image = normalize(image, mode=None)
-                else:
-                    image = normalize(image, mode='tf')
-        else:
-            if self.is_grey:
+                # if self.is_grey:
                 image = normalize(image, mode=None)
-            else:
-                image = normalize(image, mode='tf')
+                # else:
+                #     image = normalize(image, mode='tf')
+        else:
+            # if self.is_grey:
+            image = normalize(image, mode=None)
+            # else:
+            #     image = normalize(image, mode='tf')
 
         # image = image.reshape(image.shape[0], image.shape[1], 1)
         return image

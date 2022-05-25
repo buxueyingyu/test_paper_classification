@@ -12,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 from data.data_process import DataProcessor
 from keras_cls.train import \
-    train_image_classification_model, Image_Classification_Parameter
+    train_image_classification_model, Image_Tast_Parameter
 from keras_cls.inference import get_image_classification_inference
 from keras_cls.generator.generator_builder import get_generator
 
@@ -146,7 +146,7 @@ def train():
     train_data_file = os.path.join(root_path, dataset_path, config.get('train_data_file', 'train.csv'))
     model_folder = config.get('model_folder', 'model')
 
-    img_cls_params = Image_Classification_Parameter()
+    img_cls_params = Image_Tast_Parameter()
     img_cls_params.checkpoints = os.path.join(root_path, model_folder)
     os.makedirs(img_cls_params.checkpoints, exist_ok=True)
     img_cls_params.label_file = train_data_file
@@ -173,7 +173,7 @@ def test_data_generator():
     train_data_file = os.path.join(root_path, dataset_path, config.get('train_data_file', 'train.csv'))
     model_folder = config.get('model_folder', 'model')
 
-    img_cls_params = Image_Classification_Parameter()
+    img_cls_params = Image_Tast_Parameter()
     img_cls_params.checkpoints = os.path.join(root_path, model_folder)
     os.makedirs(img_cls_params.checkpoints, exist_ok=True)
     img_cls_params.label_file = train_data_file

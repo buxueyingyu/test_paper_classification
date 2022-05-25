@@ -14,7 +14,7 @@ from tensorflow.keras.activations import softmax, sigmoid
 import tensorflow.keras.backend as K
 
 from keras_cls.model.model_builder import get_model
-from keras_cls.train import Image_Classification_Parameter
+from keras_cls.train import Image_Tast_Parameter
 from keras_cls.utils.class_head import class_head
 from keras_cls.utils.common import get_best_model_path
 from keras_cls.utils.preprocess import normalize, resize_img
@@ -27,7 +27,7 @@ from keras_cls.utils.lr_scheduler import get_lr_scheduler
 
 
 class MatchNet:
-    def __init__(self, img_cls_params: Image_Classification_Parameter, single_backbone: bool = False):
+    def __init__(self, img_cls_params: Image_Tast_Parameter, single_backbone: bool = False):
         self.img_cls_params = img_cls_params
         self.single_backbone = single_backbone
         # self.bertish = AutoModel('effcientNet')

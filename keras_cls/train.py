@@ -22,7 +22,7 @@ if physical_devices:
     tf.config.experimental.set_memory_growth(physical_devices[0], True)
 
 
-class Image_Classification_Parameter:
+class Image_Tast_Parameter:
     def __init__(self,
                  epochs: int = 30,
                  batch_size: int = 32,
@@ -52,7 +52,9 @@ class Image_Classification_Parameter:
                  accumulated_gradient_num: int = 1,
                  local_weights: str = None,
                  checkpoints: str = r'./checkpoints',
-                 is_simple_network: bool = False):
+                 is_simple_network: bool = False,
+                 simpe_network_type: str = 'complex_cnn',
+                 save_all_epoch_model: bool = False):
         self.epochs = epochs
         self.batch_size = batch_size
         img_size_list = []
@@ -85,6 +87,8 @@ class Image_Classification_Parameter:
         self.checkpoints = checkpoints
         self.local_weights = local_weights
         self.is_simple_network = is_simple_network
+        self.simple_network_type = simpe_network_type
+        self.save_all_epoch_model = save_all_epoch_model
 
 
 def parse_args(args):
@@ -136,7 +140,7 @@ import numpy as np
 from tqdm import tqdm
 
 
-def train_image_classification_model(args: Image_Classification_Parameter):
+def train_image_classification_model(args: Image_Tast_Parameter):
     assert args.label_file and os.path.exists(args.label_file)
     assert args.dataset_dir and os.path.exists(args.dataset_dir)
     # set mixed_precision to float16
@@ -285,7 +289,7 @@ def train_image_classification_model(args: Image_Classification_Parameter):
     print("finished!")
 
 
-def validate_train_model(args: Image_Classification_Parameter):
+def validate_train_model(args: Image_Tast_Parameter):
     try:
         # set mixed_precision to float16
         if args.mixed_precision:
@@ -303,5 +307,5 @@ def validate_train_model(args: Image_Classification_Parameter):
 
 
 if __name__ == '__main__':
-    parameter = Image_Classification_Parameter()
+    parameter = Image_Tast_Parameter()
     train_image_classification_model(parameter)

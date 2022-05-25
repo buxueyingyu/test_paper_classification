@@ -9,13 +9,13 @@ import time
 from tqdm import tqdm
 
 from keras_cls.model.model_builder import get_model
-from keras_cls.train import Image_Classification_Parameter
+from keras_cls.train import Image_Tast_Parameter
 from keras_cls.utils.common import get_best_model_path
 from keras_cls.utils.preprocess import normalize, resize_img
 
 
 class Image_Classification_Inference:
-    def __init__(self, para: Image_Classification_Parameter):
+    def __init__(self, para: Image_Tast_Parameter):
         self.para = para
         checkpoints = para.checkpoints
         self.tag2idx = None
@@ -167,7 +167,7 @@ def get_image_classification_inference(root_path: str,
     except:
         pass
 
-    img_cls_params = Image_Classification_Parameter()
+    img_cls_params = Image_Tast_Parameter()
     img_cls_params.checkpoints = os.path.join(root_path, model_folder)
     img_cls_params.label_file = os.path.join(root_path,
                                              test_label_file)

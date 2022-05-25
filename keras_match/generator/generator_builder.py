@@ -5,12 +5,10 @@ def get_generator(args, is_grey: bool = False):
     if args.dataset_type == 'default':
         train_generator = DefaultGenerator(args,
                                            mode="train",
-                                           is_grey= is_grey,
                                            train_valid_split_ratio=args.train_valid_split_ratio,
                                            dataset_sample_ratio=args.dataset_sample_ratio)
         val_generator = DefaultGenerator(args,
                                          mode="valid",
-                                         is_grey=is_grey,
                                          train_valid_split_ratio=args.train_valid_split_ratio,
                                          dataset_sample_ratio=args.dataset_sample_ratio)
     else:
