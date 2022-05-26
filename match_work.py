@@ -24,6 +24,7 @@ def get_image_task_parameter(data_mode: str = 'train',
                              progressive_resizing=[(256, 256)],
                              num_classes: int = 2,
                              batch_size: int = 8,
+                             epochs: int = 20,
                              model_path: str = 'match_model',
                              is_simple_network: bool = False,
                              simple_network_type: str = 'complex_cnn',
@@ -58,7 +59,7 @@ def get_image_task_parameter(data_mode: str = 'train',
     input_shape = get_input_shape(backbone, progressive_resizing, is_simple_network)
     img_cls_params.progressive_resizing = input_shape
     img_cls_params.batch_size = batch_size
-    img_cls_params.epochs = 100
+    img_cls_params.epochs = epochs
     img_cls_params.simple_network_type = simple_network_type
     img_cls_params.save_all_epoch_model = save_all_epoch_model
     return img_cls_params
@@ -212,6 +213,7 @@ model_dict = {'efficientnet': {'data_mode': 'train',
                                'progressive_resizing': [(260, 260)],
                                'num_classes': 2,
                                'batch_size': 16,
+                               'epochs': 20,
                                'model_path': 'match_efficientnet_model',
                                'is_simple_network': False,
                                'simple_network_type': None,
@@ -222,6 +224,7 @@ model_dict = {'efficientnet': {'data_mode': 'train',
                              'progressive_resizing': [(256, 256)],
                              'num_classes': 2,
                              'batch_size': 8,
+                             'epochs': 20,
                              'model_path': 'match_pure_dense_model',
                              'is_simple_network': True,
                              'simple_network_type': 'pure_dense',
@@ -232,6 +235,7 @@ model_dict = {'efficientnet': {'data_mode': 'train',
                               'progressive_resizing': [(256, 256)],
                               'num_classes': 2,
                               'batch_size': 64,
+                              'epochs': 20,
                               'model_path': 'match_complex_cnn_model',
                               'is_simple_network': True,
                               'simple_network_type': 'complex_cnn',
@@ -243,15 +247,19 @@ def train_simple_match_model():
     for model_type, model_info in model_dict.items():
         if not model_info:
             return
+        logger.info(f'Train model: {model_type}')
+        logger.info(model_info)
         img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'train'),
                                                   init_lr=model_info.get('init_lr', 8e-4),
                                                   backbone=model_info.get('backbone', 'EfficientB2'),
                                                   progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
                                                   num_classes=model_info.get('num_classes', 2),
                                                   batch_size=model_info.get('batch_size', 8),
+                                                  epochs=model_info.get('epochs', 20),
                                                   model_path=model_info.get('model_path', 'match_model'),
                                                   is_simple_network=model_info.get('is_simple_network', True),
-                                                  simple_network_type=model_info.get('simple_network_type', 'complex_cnn')
+                                                  simple_network_type=model_info.get('simple_network_type', 'complex_cnn'),
+                                                  save_all_epoch_model=model_info.get('save_all_epoch_model', False)
                                                   )
         match_net = SimpleMatchNet(img_task_params=img_task_param,
                                    complex_cnn_last_dense_size=256)
@@ -263,15 +271,17 @@ def validate_simple_match_model():
     model_info = model_dict.get(model_type, {})
     if not model_info:
         return
-    img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'test'),
+    img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'train'),
                                               init_lr=model_info.get('init_lr', 8e-4),
                                               backbone=model_info.get('backbone', 'EfficientB2'),
                                               progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
                                               num_classes=model_info.get('num_classes', 2),
                                               batch_size=model_info.get('batch_size', 8),
+                                              epochs=model_info.get('epochs', 20),
                                               model_path=model_info.get('model_path', 'match_model'),
                                               is_simple_network=model_info.get('is_simple_network', True),
-                                              simple_network_type=model_info.get('simple_network_type', 'complex_cnn')
+                                              simple_network_type=model_info.get('simple_network_type', 'complex_cnn'),
+                                              save_all_epoch_model=model_info.get('save_all_epoch_model', False)
                                               )
     match_net_inference = MatchNetInference(img_cls_params=img_task_param,
                                             complex_cnn_last_dense_size=256)
@@ -285,15 +295,17 @@ def predict_simple_match_model():
         return
     image_path = r'/data/math_research/test_paper_cls/dataset/test/'
     image_pair_list = [['paper_20220506_29_0.jpg', 'paper_20220506_29_10.jpg']]
-    img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'test'),
+    img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'train'),
                                               init_lr=model_info.get('init_lr', 8e-4),
                                               backbone=model_info.get('backbone', 'EfficientB2'),
                                               progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
                                               num_classes=model_info.get('num_classes', 2),
                                               batch_size=model_info.get('batch_size', 8),
+                                              epochs=model_info.get('epochs', 20),
                                               model_path=model_info.get('model_path', 'match_model'),
                                               is_simple_network=model_info.get('is_simple_network', True),
-                                              simple_network_type=model_info.get('simple_network_type', 'complex_cnn')
+                                              simple_network_type=model_info.get('simple_network_type', 'complex_cnn'),
+                                              save_all_epoch_model=model_info.get('save_all_epoch_model', False)
                                               )
     match_net_inference = MatchNetInference(img_cls_params=img_task_param,
                                             complex_cnn_last_dense_size=256)
