@@ -262,11 +262,12 @@ class SimpleMatchNet:
 
                 train_loss += data_loss
                 train_generator_tqdm.set_description(
-                    "epoch:{}/{},train_loss:{:.5f},lr:{:.6f}".format(epoch + 1, self.img_task_params.epochs,
+                    "epoch:{}/{},train_loss:{:.5f},lr:{:.6f}".format(epoch + 1,
+                                                                     self.img_task_params.epochs,
                                                                      train_loss / (batch_index + 1),
                                                                      optimizer.learning_rate.numpy()))
             train_generator.on_epoch_end()
-
+            train_loss_avg = train_loss / (batch_index + 1)
             # evaluation
             if epoch >= self.img_task_params.start_eval_epoch - 1:
                 val_loss = 0
@@ -305,8 +306,9 @@ class SimpleMatchNet:
                     best_val_loss = cur_val_loss
                     best_val_epoch = epoch + 1
                     best_weight_path = os.path.join(self.img_task_params.checkpoints,
-                                                    'img_match_{}_val_loss_{:.3f}_val_acc_{:.3f}_epoch_{}'
+                                                    'img_match_{}_train_loss_{:.3f}_val_loss_{:.3f}_val_acc_{:.3f}_epoch_{}'
                                                     .format(backbone,
+                                                            train_loss_avg,
                                                             best_val_loss,
                                                             cur_val_acc,
                                                             best_val_epoch))

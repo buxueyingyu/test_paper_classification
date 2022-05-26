@@ -112,8 +112,8 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                 left_img = self.valid_resize_img(left_img)
                 right_img = self.valid_resize_img(right_img)
 
-                left_img = self.get_normalized_grey_image(left_img)
-                right_img = self.get_normalized_grey_image(right_img)
+                left_img = self.get_normalized_image(left_img)
+                right_img = self.get_normalized_image(right_img)
                 batch_imgs.append((left_img, right_img))
                 if self.args.loss == 'bce':
                     one_hot_batch_labels[i] = batch_labels[i]
@@ -146,8 +146,8 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                     left_img = self.baseline_augment.distort(left_img)
                     right_img = self.baseline_augment.distort(right_img)
 
-                left_img = self.get_normalized_grey_image(left_img)
-                right_img = self.get_normalized_grey_image(right_img)
+                left_img = self.get_normalized_image(left_img)
+                right_img = self.get_normalized_image(right_img)
                 batch_imgs.append((left_img, right_img))
                 if self.args.loss == 'bce':
                     one_hot_batch_labels[i] = batch_labels[i]
@@ -160,7 +160,7 @@ class DefaultGenerator(tf.keras.utils.Sequence):
 
         return batch_imgs, one_hot_batch_labels
 
-    def get_normalized_grey_image(self, image:np.ndarray):
+    def get_normalized_image(self, image:np.ndarray):
         # image = np.asarray(Image.fromarray(np.uint8(image)).convert('L'))
         if self.args.weights:
             if self.args.backbone and self.args.backbone[0:3] == "Res":

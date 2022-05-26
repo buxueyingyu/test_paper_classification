@@ -47,14 +47,15 @@ class MatchNetInference:
             else:
                 checkpoints = img_cls_params.checkpoints
                 if checkpoints and isinstance(checkpoints, str) and os.path.exists(checkpoints):
-                    local_weights = get_best_model_path(checkpoints)
+                    local_weights = get_best_model_path(checkpoints, prefix=r'img_match*')
                     if local_weights:
                         self.model.load_weights(local_weights)
                         print(f'table classification checkpoints: {checkpoints}, local weights: {local_weights}')
             self.local_weights = local_weights
         except:
             pass
-        self.baseline = Inference_Baseline()
+        img_size = img_cls_params.progressive_resizing[-1]
+        self.baseline = Inference_Baseline(img_size)
 
     def validate(self, validate_data_file: str):
         assert validate_data_file and os.path.exists(validate_data_file)
@@ -148,7 +149,7 @@ class MatchNetInference:
         pred_result = self.model([batch_images[:, 0], batch_images[:, 1]])
         pred_cls = int(pred_result[0][0] < 0.5)
         if with_pred_value:
-            return pred_cls, pred_result
+            return pred_cls, pred_result[0][0]
         else:
             return pred_cls
 
@@ -173,8 +174,9 @@ class MatchNetInference:
 
 
 class Inference_Baseline:
-    def __init__(self, ):
+    def __init__(self, img_size: tuple):
         self.transform = A.Compose([
+            A.CenterCrop(width=img_size[0], height=img_size[1]),
             A.CLAHE(clip_limit=4.0, tile_grid_size=(4, 4), p=1.0),
         ])
 

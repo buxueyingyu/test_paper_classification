@@ -76,8 +76,8 @@ def show_classes_hist(class_sizes, class_names):
     plt.show()
 
 
-def get_best_model_path(dir):
-    files = glob.glob(os.path.join(dir, "img_cls_best_weight*"))
+def get_best_model_path(dir, prefix: str = r'img_cls_best_weight*'):
+    files = glob.glob(os.path.join(dir, prefix))
     sorted_by_mtime_descending = sorted(files, key=lambda t: -os.stat(t).st_mtime)
     if len(sorted_by_mtime_descending) == 0:
         return None
