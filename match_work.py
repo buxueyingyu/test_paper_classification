@@ -323,5 +323,5 @@ if __name__ == '__main__':
     # validate()
     # predict_simple_match_model()
     # test_simple_match_net()
-    # train_simple_match_model()
-    validate_simple_match_model()
+    train_simple_match_model()
+    # validate_simple_match_model()

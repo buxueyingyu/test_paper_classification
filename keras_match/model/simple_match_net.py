@@ -296,8 +296,9 @@ class SimpleMatchNet:
                     backbone = self.img_task_params.backbone
                 if self.img_task_params.save_all_epoch_model:
                     weight_path = os.path.join(self.img_task_params.checkpoints,
-                                               'img_match_{}_val_loss_{:.3f}_val_acc_{:.3f}_epoch_{}'
+                                               'img_match_{}_train_loss_{:.3f}_val_loss_{:.3f}_val_acc_{:.3f}_epoch_{}'
                                                .format(backbone,
+                                                       train_loss_avg,
                                                        cur_val_loss,
                                                        cur_val_acc,
                                                        epoch + 1))
