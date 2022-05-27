@@ -93,10 +93,7 @@ class DefaultGenerator(tf.keras.utils.Sequence):
             self.data_index[batch_index * self.batch_size:(batch_index + 1) * self.batch_size]]
         batch_labels = self.label_list[
             self.data_index[batch_index * self.batch_size:(batch_index + 1) * self.batch_size]]
-        if self.args.loss == 'bce':
-            one_hot_batch_labels = np.zeros([len(batch_img_paths), 1])
-        else:
-            one_hot_batch_labels = np.zeros([len(batch_img_paths), self.num_class])
+        one_hot_batch_labels = np.zeros([len(batch_img_paths), 1])
         batch_imgs = []
         if self.mode == "valid":
             valid_index = 0
@@ -115,14 +112,9 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                 left_img = self.get_normalized_image(left_img)
                 right_img = self.get_normalized_image(right_img)
                 batch_imgs.append((left_img, right_img))
-                if self.args.loss == 'bce':
-                    one_hot_batch_labels[i] = batch_labels[i]
-                else:
-                    one_hot_batch_labels[valid_index, batch_labels[i]] = 1
+                one_hot_batch_labels[i] = batch_labels[i]
                 valid_index += 1
             batch_imgs = np.array(batch_imgs)
-            if self.args.loss != 'bce':
-                one_hot_batch_labels = one_hot_batch_labels[:valid_index]
         else:
             valid_index = 0
             for i in range(len(batch_img_paths)):
@@ -149,14 +141,9 @@ class DefaultGenerator(tf.keras.utils.Sequence):
                 left_img = self.get_normalized_image(left_img)
                 right_img = self.get_normalized_image(right_img)
                 batch_imgs.append((left_img, right_img))
-                if self.args.loss == 'bce':
-                    one_hot_batch_labels[i] = batch_labels[i]
-                else:
-                    one_hot_batch_labels[valid_index, batch_labels[i]] = 1
+                one_hot_batch_labels[i] = batch_labels[i]
                 valid_index += 1
             batch_imgs = np.array(batch_imgs)
-            if self.args.loss != 'bce':
-                one_hot_batch_labels = one_hot_batch_labels[:valid_index]
 
         return batch_imgs, one_hot_batch_labels
 

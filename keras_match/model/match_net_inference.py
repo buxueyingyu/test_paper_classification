@@ -87,21 +87,23 @@ class MatchNetInference:
                                                                 right_image_path,
                                                                 with_pred_value=True)
                 if ground_truth == 1:
-                    print('{0}/{1} left mage: {2}, right image: {3}, ground truth: {4}, prediction: {5}, prediction value: {6}'
-                          .format(index + 1,
-                                  len(validate_data),
-                                  left_image_name,
-                                  right_image_name,
-                                  self.idx2tag.get(ground_truth, 'N/A'),
-                                  self.idx2tag.get(prediction_cls, 'N/A'),
-                                  prediction_value))
+                    print(
+                        '{0}/{1} left mage: {2}, right image: {3}, ground truth: {4}, prediction: {5}, prediction value: {6}'
+                        .format(index + 1,
+                                len(validate_data),
+                                left_image_name,
+                                right_image_name,
+                                self.idx2tag.get(ground_truth, 'N/A'),
+                                self.idx2tag.get(prediction_cls, 'N/A'),
+                                prediction_value))
 
                 true_list.append(ground_truth)
                 predict_list.append(prediction_cls)
                 data = {'left_image': left_image_name,
                         'right_image': right_image_name,
                         'ground_truth': self.idx2tag.get(ground_truth, 'N/A'),
-                        'prediction': self.idx2tag.get(prediction_cls, 'N/A')}
+                        'prediction': self.idx2tag.get(prediction_cls, 'N/A'),
+                        'prediction_value': prediction_value}
                 details.append(data)
         labels = [label for label in range(len(tags))]
         report = sklearn_metrics.classification_report(true_list,
@@ -130,6 +132,25 @@ class MatchNetInference:
             detail_path = os.path.join(report_folder, detail_file)
             detail_df.to_csv(detail_path, sep=',', encoding='utf-8', index=False)
 
+    def batch_predict(self):
+        from keras_match.generator.generator_builder import get_generator
+        import tensorflow as tf
+        self.para.batch_size=4
+        train_generator, val_generator = get_generator(self.para)
+        val_generator_tqdm = tqdm(enumerate(val_generator), total=len(val_generator))
+        val_acc = 0
+        num_img = 0
+        for batch_index, (batch_imgs, batch_labels) in val_generator_tqdm:
+            model_outputs = self.model([batch_imgs[:, 0], batch_imgs[:, 1]])
+            raw_result = np.array(tf.less(model_outputs, 0.5))
+            predict_result = [[int(result[0])] for result in raw_result]
+            wrong_pred_mask = (batch_labels == predict_result)
+            val_acc += np.sum(wrong_pred_mask)
+            num_img += np.shape(batch_labels)[0]
+            cur_val_acc = val_acc / num_img
+            val_generator_tqdm.set_description(
+                "val_acc:{:.5f}".format(cur_val_acc))
+
     def predict(self,
                 left_image_path: str,
                 right_image_path: str,
@@ -149,7 +170,7 @@ class MatchNetInference:
         pred_result = self.model([batch_images[:, 0], batch_images[:, 1]])
         pred_cls = int(pred_result[0][0] < 0.5)
         if with_pred_value:
-            return pred_cls, pred_result[0][0]
+            return pred_cls, float(pred_result[0][0])
         else:
             return pred_cls
 

@@ -271,7 +271,7 @@ def validate_simple_match_model():
     model_info = model_dict.get(model_type, {})
     if not model_info:
         return
-    img_task_param = get_image_task_parameter(data_mode=model_info.get('data_mode', 'train'),
+    img_task_param = get_image_task_parameter(data_mode='train',
                                               init_lr=model_info.get('init_lr', 8e-4),
                                               backbone=model_info.get('backbone', 'EfficientB2'),
                                               progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
@@ -314,6 +314,28 @@ def predict_simple_match_model():
                                           os.path.join(image_path, image_pair[1])))
 
 
+def batch_predict_simple_match_model():
+    model_type = 'efficientnet'
+    model_info = model_dict.get(model_type, {})
+    if not model_info:
+        return
+    img_task_param = get_image_task_parameter(data_mode='test',
+                                              init_lr=model_info.get('init_lr', 8e-4),
+                                              backbone=model_info.get('backbone', 'EfficientB2'),
+                                              progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
+                                              num_classes=model_info.get('num_classes', 2),
+                                              batch_size=4,
+                                              epochs=model_info.get('epochs', 20),
+                                              model_path=model_info.get('model_path', 'match_model'),
+                                              is_simple_network=model_info.get('is_simple_network', True),
+                                              simple_network_type=model_info.get('simple_network_type', 'complex_cnn'),
+                                              save_all_epoch_model=model_info.get('save_all_epoch_model', False)
+                                              )
+    match_net_inference = MatchNetInference(img_cls_params=img_task_param,
+                                            complex_cnn_last_dense_size=256)
+    match_net_inference.batch_predict()
+
+
 if __name__ == '__main__':
     # test_match_net()
     # generate_match_data()
@@ -325,3 +347,4 @@ if __name__ == '__main__':
     # test_simple_match_net()
     train_simple_match_model()
     # validate_simple_match_model()
+    # batch_predict_simple_match_model()
