@@ -271,12 +271,12 @@ def validate_simple_match_model():
     model_info = model_dict.get(model_type, {})
     if not model_info:
         return
-    img_task_param = get_image_task_parameter(data_mode='train',
+    img_task_param = get_image_task_parameter(data_mode='test',
                                               init_lr=model_info.get('init_lr', 8e-4),
                                               backbone=model_info.get('backbone', 'EfficientB2'),
                                               progressive_resizing=model_info.get('progressive_resizing', [(256, 256)]),
                                               num_classes=model_info.get('num_classes', 2),
-                                              batch_size=model_info.get('batch_size', 8),
+                                              batch_size=4,
                                               epochs=model_info.get('epochs', 20),
                                               model_path=model_info.get('model_path', 'match_model'),
                                               is_simple_network=model_info.get('is_simple_network', True),
@@ -345,6 +345,6 @@ if __name__ == '__main__':
     # validate()
     # predict_simple_match_model()
     # test_simple_match_net()
-    train_simple_match_model()
-    # validate_simple_match_model()
+    # train_simple_match_model()
+    validate_simple_match_model()
     # batch_predict_simple_match_model()

@@ -86,21 +86,23 @@ class MatchNetInference:
                 prediction_cls, prediction_value = self.predict(left_image_path,
                                                                 right_image_path,
                                                                 with_pred_value=True)
-                if ground_truth == 1:
-                    print(
-                        '{0}/{1} left mage: {2}, right image: {3}, ground truth: {4}, prediction: {5}, prediction value: {6}'
-                        .format(index + 1,
-                                len(validate_data),
-                                left_image_name,
-                                right_image_name,
-                                self.idx2tag.get(ground_truth, 'N/A'),
-                                self.idx2tag.get(prediction_cls, 'N/A'),
-                                prediction_value))
+
+                print(
+                    '{0}/{1} Correct: {2} left mage: {3}, right image: {4}, ground truth: {5}, prediction: {6}, prediction value: {7}'
+                    .format(index + 1,
+                            len(validate_data),
+                            ground_truth == prediction_cls,
+                            left_image_name,
+                            right_image_name,
+                            self.idx2tag.get(ground_truth, 'N/A'),
+                            self.idx2tag.get(prediction_cls, 'N/A'),
+                            prediction_value))
 
                 true_list.append(ground_truth)
                 predict_list.append(prediction_cls)
                 data = {'left_image': left_image_name,
                         'right_image': right_image_name,
+                        'correct': ground_truth == prediction_cls,
                         'ground_truth': self.idx2tag.get(ground_truth, 'N/A'),
                         'prediction': self.idx2tag.get(prediction_cls, 'N/A'),
                         'prediction_value': prediction_value}
