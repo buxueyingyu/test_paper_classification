@@ -50,7 +50,7 @@ class MatchNetInference:
                     local_weights = get_best_model_path(checkpoints, prefix=r'img_match*')
                     if local_weights:
                         self.model.load_weights(local_weights)
-                        print(f'table classification checkpoints: {checkpoints}, local weights: {local_weights}')
+                        print(f'checkpoints: {checkpoints}, local weights: {local_weights}')
             self.local_weights = local_weights
         except:
             pass
@@ -199,7 +199,7 @@ class MatchNetInference:
 class Inference_Baseline:
     def __init__(self, img_size: tuple):
         self.transform = A.Compose([
-            A.CenterCrop(width=img_size[0], height=img_size[1]),
+            # A.CenterCrop(width=img_size[0], height=img_size[1]),
             A.CLAHE(clip_limit=4.0, tile_grid_size=(4, 4), p=1.0),
         ])
 

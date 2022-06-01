@@ -213,33 +213,33 @@ model_dict = {'efficientnet': {'data_mode': 'train',
                                'progressive_resizing': [(260, 260)],
                                'num_classes': 2,
                                'batch_size': 16,
-                               'epochs': 20,
+                               'epochs': 40,
                                'model_path': 'match_efficientnet_model',
                                'is_simple_network': False,
                                'simple_network_type': None,
                                'save_all_epoch_model': True},
-              'pure_dense': {'data_mode': 'train',
-                             'init_lr': 8e-4,
-                             'backbone': None,
-                             'progressive_resizing': [(256, 256)],
-                             'num_classes': 2,
-                             'batch_size': 8,
-                             'epochs': 20,
-                             'model_path': 'match_pure_dense_model',
-                             'is_simple_network': True,
-                             'simple_network_type': 'pure_dense',
-                             'save_all_epoch_model': True},
-              'complex_cnn': {'data_mode': 'train',
-                              'init_lr': 8e-4,
-                              'backbone': None,
-                              'progressive_resizing': [(256, 256)],
-                              'num_classes': 2,
-                              'batch_size': 64,
-                              'epochs': 20,
-                              'model_path': 'match_complex_cnn_model',
-                              'is_simple_network': True,
-                              'simple_network_type': 'complex_cnn',
-                              'save_all_epoch_model': True}
+              # 'pure_dense': {'data_mode': 'train',
+              #                'init_lr': 8e-4,
+              #                'backbone': None,
+              #                'progressive_resizing': [(256, 256)],
+              #                'num_classes': 2,
+              #                'batch_size': 8,
+              #                'epochs': 20,
+              #                'model_path': 'match_pure_dense_model',
+              #                'is_simple_network': True,
+              #                'simple_network_type': 'pure_dense',
+              #                'save_all_epoch_model': True},
+              # 'complex_cnn': {'data_mode': 'train',
+              #                 'init_lr': 8e-4,
+              #                 'backbone': None,
+              #                 'progressive_resizing': [(256, 256)],
+              #                 'num_classes': 2,
+              #                 'batch_size': 64,
+              #                 'epochs': 20,
+              #                 'model_path': 'match_complex_cnn_model',
+              #                 'is_simple_network': True,
+              #                 'simple_network_type': 'complex_cnn',
+              #                 'save_all_epoch_model': True}
               }
 
 
@@ -345,6 +345,6 @@ if __name__ == '__main__':
     # validate()
     # predict_simple_match_model()
     # test_simple_match_net()
-    # train_simple_match_model()
-    validate_simple_match_model()
+    train_simple_match_model()
+    # validate_simple_match_model()
     # batch_predict_simple_match_model()

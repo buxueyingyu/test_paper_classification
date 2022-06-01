@@ -180,6 +180,13 @@ class SimpleMatchNet:
         # show_classes_hist(train_generator.class_counts, train_generator.class_names)
 
         model = self.get_match_net()
+        if self.img_task_params.checkpoints and \
+                isinstance(self.img_task_params.checkpoints, str) and \
+                os.path.exists(self.img_task_params.checkpoints):
+            local_weights = get_best_model_path(self.img_task_params.checkpoints, prefix=r'img_match*')
+            if local_weights:
+                model.load_weights(local_weights)
+                print(f'checkpoints: {self.img_task_params.checkpoints}, local weights: {local_weights}')
         model_image_file = os.path.join(self.img_task_params.checkpoints, 'model_structure.png')
         plot_model(model, model_image_file, show_shapes=True)
         model.summary()
